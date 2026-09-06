@@ -123,6 +123,8 @@ class ProgramCreate(BaseModel):
 class SessionUpdate(BaseModel):
     completed: Optional[bool] = None
     notes: Optional[str] = None
+    drills: Optional[List[dict]] = None
+    theme: Optional[str] = None
 
 
 class TeamCreate(BaseModel):
@@ -254,6 +256,31 @@ async def update_session(
                 s["completed"] = payload.completed
             if payload.notes is not None:
                 s["notes"] = payload.notes
+            if payload.theme is not None:
+                s["theme"] = payload.theme.strip()[:120] or s["theme"]
+            if payload.drills is not None:
+                # Sanitise: keep only fields we recognise; ensure duration is int
+                cleaned = []
+                for d in payload.drills:
+                    if not isinstance(d, dict):
+                        continue
+                    try:
+                        duration = int(d.get("duration", 0))
+                    except (TypeError, ValueError):
+                        duration = 0
+                    cleaned.append({
+                        "id": str(d.get("id") or f"custom-{uuid.uuid4()}"),
+                        "name": str(d.get("name", "Untitled drill"))[:120],
+                        "category": str(d.get("category", "Custom"))[:60],
+                        "level": int(d.get("level", 1) or 1),
+                        "duration": max(1, min(duration, 60)),
+                        "description": str(d.get("description", ""))[:600],
+                        "video": str(d.get("video", ""))[:200],
+                        "coach_notes": str(d.get("coach_notes", ""))[:600],
+                        "custom": bool(d.get("custom", False)) or str(d.get("id", "")).startswith("custom-"),
+                    })
+                s["drills"] = cleaned
+                s["total_minutes"] = sum(d["duration"] for d in cleaned)
             updated = True
             break
     if not updated:

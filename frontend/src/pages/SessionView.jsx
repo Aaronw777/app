@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "@/lib/api";
-import { ArrowLeft, Check, Printer, Clock, Zap, ExternalLink, Play, FileText } from "lucide-react";
+import { ArrowLeft, Check, Printer, Clock, Zap, ExternalLink, Play, FileText, Edit3, Trash2, ChevronUp, ChevronDown, Plus, Save, RotateCcw } from "lucide-react";
 import SessionTimer from "@/components/SessionTimer";
 import CourtDiagram from "@/components/CourtDiagram";
+import DrillPicker from "@/components/DrillPicker";
+import CustomDrillForm from "@/components/CustomDrillForm";
 import { toast } from "sonner";
 
 export default function SessionView() {
@@ -12,6 +14,10 @@ export default function SessionView() {
   const [program, setProgram] = useState(null);
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [draftDrills, setDraftDrills] = useState([]);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [customOpen, setCustomOpen] = useState(false);
 
   const load = async () => {
     try {
@@ -60,6 +66,52 @@ export default function SessionView() {
     }
   };
 
+  // ---- Edit mode helpers ----
+  const startEdit = () => {
+    setDraftDrills(JSON.parse(JSON.stringify(session.drills)));
+    setEditing(true);
+  };
+  const cancelEdit = () => {
+    setEditing(false);
+    setDraftDrills([]);
+  };
+  const moveDrill = (idx, dir) => {
+    const j = idx + dir;
+    if (j < 0 || j >= draftDrills.length) return;
+    const copy = [...draftDrills];
+    [copy[idx], copy[j]] = [copy[j], copy[idx]];
+    setDraftDrills(copy);
+  };
+  const removeDrill = (idx) => {
+    setDraftDrills(draftDrills.filter((_, i) => i !== idx));
+  };
+  const addDrill = (drill) => {
+    setDraftDrills([...draftDrills, { ...drill }]);
+  };
+  const saveDrills = async () => {
+    if (draftDrills.length === 0) {
+      toast.error("Add at least one drill before saving.");
+      return;
+    }
+    setSaving(true);
+    try {
+      const { data } = await api.patch(`/programs/${id}/sessions/${weekNum}`, {
+        drills: draftDrills,
+      });
+      setProgram(data);
+      setEditing(false);
+      setDraftDrills([]);
+      toast.success("Session updated");
+    } catch (e) {
+      toast.error(e.response?.data?.detail || "Save failed");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const drillsToRender = editing ? draftDrills : session.drills;
+  const draftTotal = draftDrills.reduce((sum, d) => sum + (d.duration || 0), 0);
+
   return (
     <div className="max-w-5xl mx-auto px-6 py-16" data-testid="session-view-page">
       <Link
@@ -85,36 +137,133 @@ export default function SessionView() {
           <p className="text-white/60 mt-3">{session.coach_reference}</p>
         </div>
         <div className="flex flex-wrap gap-3 no-print">
-          <Link
-            to={`/programs/${id}/week/${weekNum}/handout`}
-            data-testid="session-handout-link"
-            className="btn-ghost"
-          >
-            <FileText size={14} /> Parent Handout
-          </Link>
-          <button
-            data-testid="session-print-btn"
-            onClick={() => window.print()}
-            className="btn-ghost"
-          >
-            <Printer size={14} /> Print / PDF
-          </button>
-          <button
-            data-testid="session-complete-btn"
-            onClick={toggleComplete}
-            disabled={saving}
-            className={session.completed ? "btn-ghost" : "btn-primary"}
-          >
-            <Check size={14} /> {session.completed ? "Completed ✓" : "Mark Complete"}
-          </button>
+          {editing ? (
+            <>
+              <button
+                data-testid="session-cancel-edit-btn"
+                onClick={cancelEdit}
+                className="btn-ghost"
+              >
+                <RotateCcw size={14} /> Cancel
+              </button>
+              <button
+                data-testid="session-save-drills-btn"
+                onClick={saveDrills}
+                disabled={saving}
+                className="btn-primary disabled:opacity-50"
+              >
+                <Save size={14} /> Save Session
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                to={`/programs/${id}/week/${weekNum}/handout`}
+                data-testid="session-handout-link"
+                className="btn-ghost"
+              >
+                <FileText size={14} /> Parent Handout
+              </Link>
+              <button
+                data-testid="session-edit-btn"
+                onClick={startEdit}
+                className="btn-ghost"
+              >
+                <Edit3 size={14} /> Amend Session
+              </button>
+              <button
+                data-testid="session-print-btn"
+                onClick={() => window.print()}
+                className="btn-ghost"
+              >
+                <Printer size={14} /> Print / PDF
+              </button>
+              <button
+                data-testid="session-complete-btn"
+                onClick={toggleComplete}
+                disabled={saving}
+                className={session.completed ? "btn-ghost" : "btn-primary"}
+              >
+                <Check size={14} /> {session.completed ? "Completed ✓" : "Mark Complete"}
+              </button>
+            </>
+          )}
         </div>
       </div>
 
-      <SessionTimer drills={session.drills} />
+      {editing && (
+        <div
+          data-testid="edit-banner"
+          className="mb-6 border border-[#FF7324]/50 bg-[#FF7324]/10 rounded-sm p-4 flex flex-wrap items-center justify-between gap-3 no-print"
+        >
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.3em] text-[#FF7324] font-bold">
+              Editing Session
+            </div>
+            <div className="text-sm text-white/80 mt-1">
+              Add, reorder or remove drills to tailor this week to your squad&apos;s needs.
+              Current total: <span className="font-display text-[#FFCD00]">{draftTotal} min</span>
+            </div>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <button
+              data-testid="add-from-library-btn"
+              onClick={() => setPickerOpen(true)}
+              className="btn-primary"
+              style={{ padding: "0.55rem 1rem" }}
+            >
+              <Plus size={14} /> From Library
+            </button>
+            <button
+              data-testid="add-custom-btn"
+              onClick={() => setCustomOpen(true)}
+              className="btn-ghost"
+              style={{ padding: "0.55rem 1rem" }}
+            >
+              <Plus size={14} /> Custom Drill
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!editing && <SessionTimer drills={session.drills} />}
 
       <div className="space-y-6 stagger">
-        {session.drills.map((d, idx) => (
-          <div key={`${d.id}-${idx}`} data-testid={`drill-${d.id}`} className="card-tactical">
+        {drillsToRender.map((d, idx) => (
+          <div key={`${d.id}-${idx}`} data-testid={`drill-${d.id}`} className="card-tactical relative">
+            {editing && (
+              <div
+                className="absolute top-3 right-3 flex items-center gap-1 no-print z-10"
+                data-testid={`drill-edit-controls-${d.id}`}
+              >
+                <button
+                  data-testid={`drill-move-up-${idx}`}
+                  onClick={() => moveDrill(idx, -1)}
+                  disabled={idx === 0}
+                  className="p-1.5 border border-white/10 hover:border-[#FFCD00] rounded-sm text-white/70 hover:text-[#FFCD00] disabled:opacity-30"
+                  aria-label="Move up"
+                >
+                  <ChevronUp size={14} />
+                </button>
+                <button
+                  data-testid={`drill-move-down-${idx}`}
+                  onClick={() => moveDrill(idx, 1)}
+                  disabled={idx === drillsToRender.length - 1}
+                  className="p-1.5 border border-white/10 hover:border-[#FFCD00] rounded-sm text-white/70 hover:text-[#FFCD00] disabled:opacity-30"
+                  aria-label="Move down"
+                >
+                  <ChevronDown size={14} />
+                </button>
+                <button
+                  data-testid={`drill-remove-${idx}`}
+                  onClick={() => removeDrill(idx)}
+                  className="p-1.5 border border-red-500/30 hover:border-red-400 rounded-sm text-red-300 hover:text-red-200"
+                  aria-label="Remove drill"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            )}
             <div className="grid md:grid-cols-3 gap-6">
               <div className="md:col-span-2">
                 <div className="flex flex-wrap items-center gap-2 mb-3">
@@ -122,6 +271,7 @@ export default function SessionView() {
                     {String(idx + 1).padStart(2, "0")}
                   </span>
                   <span className="tag">{d.category}</span>
+                  {d.custom && <span className="tag tag-orange">Coach&apos;s Own</span>}
                   <span className="tag tag-orange flex items-center gap-1">
                     <Clock size={10} /> {d.duration} min
                   </span>
@@ -188,7 +338,40 @@ export default function SessionView() {
             </div>
           </div>
         ))}
+        {editing && drillsToRender.length === 0 && (
+          <div className="card-tactical text-center py-10">
+            <div className="text-white/60 mb-3">This session has no drills yet.</div>
+            <button
+              onClick={() => setPickerOpen(true)}
+              className="btn-primary"
+              data-testid="empty-add-drill-btn"
+            >
+              <Plus size={14} /> Add Your First Drill
+            </button>
+          </div>
+        )}
+        {editing && drillsToRender.length > 0 && (
+          <button
+            data-testid="add-drill-bottom-btn"
+            onClick={() => setPickerOpen(true)}
+            className="w-full border-2 border-dashed border-white/15 hover:border-[#FFCD00] hover:text-[#FFCD00] text-white/50 uppercase tracking-[0.25em] text-xs font-bold py-6 rounded-sm transition-colors flex items-center justify-center gap-2"
+          >
+            <Plus size={14} /> Add Another Drill
+          </button>
+        )}
       </div>
+
+      <DrillPicker
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onSelect={addDrill}
+        currentLevel={session.target_level}
+      />
+      <CustomDrillForm
+        open={customOpen}
+        onClose={() => setCustomOpen(false)}
+        onSave={addDrill}
+      />
 
       {/* Coach notes */}
       <div className="mt-12 card-tactical no-print">
