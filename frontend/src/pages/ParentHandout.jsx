@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { api } from "@/lib/api";
 import { Printer, ArrowLeft, Star } from "lucide-react";
-import TechniqueIllustration from "@/components/TechniqueIllustration";
+import CourtDiagram from "@/components/CourtDiagram";
 
 /**
  * ParentHandout — one-page kid-friendly session sheet designed for at-home
@@ -111,7 +111,7 @@ export default function ParentHandout() {
                     {d.coach_notes}
                   </div>
                   <div className="mt-3">
-                    <TechniqueIllustration category={d.category} light />
+                    <CourtDiagram category={d.category} label={d.name} light />
                   </div>
                   {(() => {
                     const q = encodeURIComponent(`${d.name} basketball drill tutorial`);
