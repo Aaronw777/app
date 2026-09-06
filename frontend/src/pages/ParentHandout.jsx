@@ -109,6 +109,24 @@ export default function ParentHandout() {
                     <strong className="not-italic">Coach hint:</strong>{" "}
                     {d.coach_notes}
                   </div>
+                  {(() => {
+                    const q = encodeURIComponent(`${d.name} basketball drill tutorial`);
+                    const url = `https://www.youtube.com/results?search_query=${q}`;
+                    return (
+                      <div className="mt-2 text-xs">
+                        <strong>YouTube example:</strong>{" "}
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          data-testid={`handout-video-${d.id}`}
+                          className="underline break-all"
+                        >
+                          {url}
+                        </a>
+                      </div>
+                    );
+                  })()}
                 </div>
                 <div className="flex flex-col items-center gap-1">
                   {[1, 2, 3].map((n) => (

@@ -141,20 +141,17 @@ export default function SessionView() {
                   const searchQuery = encodeURIComponent(`${d.name} basketball drill tutorial`);
                   const watchUrl = `https://www.youtube.com/results?search_query=${searchQuery}`;
                   return (
-                    <div className="mt-4 flex items-start gap-2 text-xs">
-                      <span className="uppercase tracking-[0.2em] text-white/40 font-bold shrink-0 mt-0.5">
-                        Find video:
-                      </span>
-                      <a
-                        href={watchUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        data-testid={`drill-video-url-${d.id}`}
-                        className="text-[#FFCD00] hover:underline break-all font-mono"
-                      >
-                        Search YouTube for &quot;{d.name}&quot;
-                      </a>
-                    </div>
+                    <a
+                      href={watchUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-testid={`drill-video-url-${d.id}`}
+                      className="mt-3 inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] font-bold text-[#FFCD00] hover:underline"
+                    >
+                      <Play size={12} fill="currentColor" />
+                      Watch YouTube Example
+                      <ExternalLink size={11} />
+                    </a>
                   );
                 })()}
               </div>
