@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "@/lib/api";
-import { Plus, Trash2, ChevronRight } from "lucide-react";
+import { Plus, Trash2, ChevronRight, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Dashboard() {
@@ -53,6 +53,34 @@ export default function Dashboard() {
           <Plus size={16} /> New Program
         </Link>
       </div>
+
+      <a
+        href="https://www.playhq.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        data-testid="dashboard-playhq-link"
+        className="card-tactical mb-10 flex items-center justify-between gap-4 group"
+      >
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-[#FFCD00] text-black flex items-center justify-center font-display text-xl rounded-sm shrink-0">
+            HQ
+          </div>
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.3em] text-white/40 font-bold">
+              External · Basketball Australia
+            </div>
+            <div className="font-display text-xl uppercase tracking-wide mt-0.5">
+              Open PlayHQ
+            </div>
+            <div className="text-sm text-white/60">
+              Fixtures, results, registrations and stats for domestic basketball
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-white/60 group-hover:text-[#FFCD00] transition-colors shrink-0">
+          Visit <ExternalLink size={12} />
+        </div>
+      </a>
 
       {loading ? (
         <div className="text-white/40 uppercase tracking-[0.3em] text-sm">Loading...</div>
