@@ -421,36 +421,53 @@ export default function SessionView() {
         />
         <div className="mt-4">
           <div className="text-[10px] uppercase tracking-[0.25em] text-white/60 mb-2 font-bold">
-            Session Photos
+            Session Photos & Clips
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            {(session.photos || []).map((mid) => (
-              <div key={mid} className="relative">
-                <MediaImage
-                  mediaId={mid}
-                  className="w-20 h-20 object-cover rounded-sm border border-white/10"
-                />
-                <button
-                  data-testid={`session-photo-remove-${mid}`}
-                  onClick={async () => {
-                    const next = (session.photos || []).filter((x) => x !== mid);
-                    try {
-                      const { data } = await api.patch(
-                        `/programs/${id}/sessions/${weekNum}`,
-                        { photos: next }
-                      );
-                      setProgram(data);
-                    } catch {
-                      toast.error("Failed to remove");
-                    }
-                  }}
-                  className="absolute -top-2 -right-2 w-5 h-5 bg-black text-white border border-white/30 rounded-full flex items-center justify-center hover:bg-red-500"
-                  aria-label="Remove photo"
-                >
-                  <span className="text-xs">×</span>
-                </button>
-              </div>
-            ))}
+            {(session.photos || []).map((mid) => {
+              const token =
+                typeof window !== "undefined"
+                  ? localStorage.getItem("cm_token")
+                  : null;
+              const url = `${API}/media/${mid}${token ? `?auth=${token}` : ""}`;
+              return (
+                <div key={mid} className="relative w-24 h-24">
+                  {/* Try <video>; if not a real video the poster event errors → swap to <img> */}
+                  <video
+                    src={url}
+                    className="w-full h-full object-cover rounded-sm border border-white/10 bg-black"
+                    controls
+                    preload="metadata"
+                    onError={(e) => {
+                      const img = document.createElement("img");
+                      img.src = url;
+                      img.className =
+                        "w-full h-full object-cover rounded-sm border border-white/10";
+                      e.currentTarget.replaceWith(img);
+                    }}
+                  />
+                  <button
+                    data-testid={`session-photo-remove-${mid}`}
+                    onClick={async () => {
+                      const next = (session.photos || []).filter((x) => x !== mid);
+                      try {
+                        const { data } = await api.patch(
+                          `/programs/${id}/sessions/${weekNum}`,
+                          { photos: next }
+                        );
+                        setProgram(data);
+                      } catch {
+                        toast.error("Failed to remove");
+                      }
+                    }}
+                    className="absolute -top-2 -right-2 w-5 h-5 bg-black text-white border border-white/30 rounded-full flex items-center justify-center hover:bg-red-500 z-10"
+                    aria-label="Remove media"
+                  >
+                    <span className="text-xs">×</span>
+                  </button>
+                </div>
+              );
+            })}
             <MediaUpload
               kind="session-photo"
               value={null}
@@ -464,10 +481,10 @@ export default function SessionView() {
                   );
                   setProgram(data);
                 } catch {
-                  toast.error("Failed to save photo");
+                  toast.error("Failed to save media");
                 }
               }}
-              accept="image/*"
+              accept="image/*,video/*"
               size="md"
             />
           </div>

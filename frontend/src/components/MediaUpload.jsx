@@ -131,14 +131,26 @@ export default function MediaUpload({
   );
 }
 
-/** Small helper that just displays a media image (with auth query param). */
-export function MediaImage({ mediaId, className, alt = "" }) {
+/** Small helper that displays a media image or video (with auth query param). */
+export function MediaImage({ mediaId, className, alt = "", isVideo = false }) {
   const token =
     typeof window !== "undefined" ? localStorage.getItem("cm_token") : null;
   if (!mediaId) return null;
+  const src = `${API}/media/${mediaId}${token ? `?auth=${token}` : ""}`;
+  if (isVideo) {
+    return (
+      <video
+        src={src}
+        className={className}
+        controls
+        preload="metadata"
+        data-testid="media-video"
+      />
+    );
+  }
   return (
     <img
-      src={`${API}/media/${mediaId}${token ? `?auth=${token}` : ""}`}
+      src={src}
       alt={alt}
       className={className}
       data-testid="media-image"

@@ -15,17 +15,30 @@ APP_NAME = "court-mastery"
 MIME_TYPES = {
     "jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png",
     "gif": "image/gif", "webp": "image/webp", "svg": "image/svg+xml",
-    "mp4": "video/mp4", "mov": "video/quicktime", "webm": "video/webm",
+    "heic": "image/heic", "heif": "image/heif",
+    "mp4": "video/mp4", "m4v": "video/mp4",
+    "mov": "video/quicktime",
+    "webm": "video/webm",
+    "avi": "video/x-msvideo",
+    "3gp": "video/3gpp", "3g2": "video/3gpp2",
+    "mkv": "video/x-matroska",
     "pdf": "application/pdf",
 }
 
-ALLOWED_IMAGE = {"image/jpeg", "image/png", "image/gif", "image/webp"}
-ALLOWED_VIDEO = {"video/mp4", "video/quicktime", "video/webm"}
+ALLOWED_IMAGE = {
+    "image/jpeg", "image/png", "image/gif", "image/webp",
+    "image/heic", "image/heif",
+}
+ALLOWED_VIDEO = {
+    "video/mp4", "video/quicktime", "video/webm",
+    "video/x-msvideo", "video/3gpp", "video/3gpp2",
+    "video/x-matroska",
+}
 ALLOWED = ALLOWED_IMAGE | ALLOWED_VIDEO
 
-# 25 MB for images, 200 MB for videos
+# 25 MB for images, 500 MB for videos (widened for iPhone .mov clips)
 MAX_IMAGE_BYTES = 25 * 1024 * 1024
-MAX_VIDEO_BYTES = 200 * 1024 * 1024
+MAX_VIDEO_BYTES = 500 * 1024 * 1024
 
 _storage_key: str | None = None
 
