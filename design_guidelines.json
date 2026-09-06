@@ -1,0 +1,110 @@
+{
+  "theme": "dark",
+  "archetype": "The Performance Pro",
+  "colors": {
+    "background": "#0A0A0A",
+    "surface": "#141414",
+    "surface_hover": "#1C1C1C",
+    "primary": "#FFCD00",
+    "primary_hover": "#E6B800",
+    "secondary": "#006400",
+    "accent_action": "#FF7324",
+    "text_primary": "#FFFFFF",
+    "text_secondary": "#A0A0A0",
+    "border": "rgba(255, 255, 255, 0.1)"
+  },
+  "typography": {
+    "headings": {
+      "font": "Anton",
+      "fallback": "sans-serif",
+      "style": "tracking-wide uppercase",
+      "usage": "Use for H1, H2, hero banners, and large numbers."
+    },
+    "body": {
+      "font": "DM Sans",
+      "fallback": "sans-serif",
+      "style": "tracking-normal",
+      "usage": "Use for all paragraphs, labels, form inputs, and small text."
+    },
+    "scale": {
+      "h1": "text-5xl md:text-6xl tracking-tight leading-none uppercase",
+      "h2": "text-4xl md:text-5xl tracking-tight leading-none uppercase",
+      "h3": "text-2xl md:text-3xl tracking-tight uppercase",
+      "body": "text-base leading-relaxed text-gray-300",
+      "small_caps": "text-xs uppercase tracking-[0.2em] font-bold text-gray-400"
+    }
+  },
+  "layouts": {
+    "general": "Mobile-first, responsive grids. Asymmetric layouts for marketing pages, dense 'Bento' style for the dashboard.",
+    "dashboard_grid": "grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6. Top row for summary cards (col-span-1), Middle row for weekly program overview (col-span-2 or 3).",
+    "marketing_grid": "The 'Tetris' grid. Wide gaps (gap-8 to gap-12). Hero section col-span-full md:col-span-8 row-span-2."
+  },
+  "visual_enhancers": {
+    "borders": "1px solid strokes (border-white/10) instead of soft shadows. Sharp and tactical.",
+    "glassmorphism": "Used only for sticky headers. bg-black/60 with backdrop-blur-xl and border-b border-white/10. Do not use pure transparent backgrounds for overlays.",
+    "hover_states": "High contrast. Hovering cards slightly lift (-translate-y-1) with primary color border glow.",
+    "textures": "Subtle noise overlay (opacity 0.03) on main backgrounds to give a tactile, gritty sports magazine feel."
+  },
+  "components": {
+    "buttons": "Sharp corners or very slight rounding (rounded-sm). High saturation primary color for primary actions. Text color black for contrast on primary yellow/gold buttons.",
+    "cards": "Flat solid background (#141414), 1px border. No drop shadow. Tactical look.",
+    "forms": "Use Shadcn Form, Input, Select. Dark backgrounds for inputs with white borders on focus.",
+    "icons": "lucide-react for sharp, clear visual indicators.",
+    "toast": "sonner, configured with dark theme."
+  },
+  "motion": {
+    "page_transitions": "Fade in and slight slide up (framer-motion).",
+    "hover": "transition-transform duration-200, scale 1.02 on interactive cards.",
+    "lists": "Staggered entrance animations for the 10-week drill lists."
+  },
+  "media": {
+    "images": [
+      {
+        "url": "https://images.unsplash.com/photo-1620743698514-c66c9a6c767f",
+        "category": "hero",
+        "description": "High energy action shot of a basketball player dunking. Use in the marketing landing page hero section."
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1612768875331-0447b960fa40",
+        "category": "program_builder",
+        "description": "Player in daytime court. Good for the 'Create Program' onboarding flow."
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1520399636535-24741e71b160",
+        "category": "coach_notes",
+        "description": "Coach and team. Use in the dashboard or session view to represent coaching and progress."
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1519432473078-0151c4f90335",
+        "category": "drills_background",
+        "description": "Shadowy player dribbling. Good as a muted background or card image for the drills library."
+      }
+    ],
+    "image_treatment": "Max overlay opacity bg-black/50. If overlay needed for text, use gradient overlay from-black/80 to-transparent rather than flat black."
+  },
+  "GENERAL_UI_UX_DESIGN_GUIDELINES": [
+    "You tend to converge toward generic, 'on distribution' outputs. In frontend design, this creates what users call the 'AI slop' aesthetic. Avoid this: make creative, distinctive frontends that surprise and delight.",
+    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients.",
+    "Don't make generic centered layouts, simplistic gradients, and uniform styling.",
+    "Create depth through layered design elements with z-index hierarchy and glass-morphism effects.",
+    "You MUST NOT apply universal transition. Eg: transition: all. This results in breaking transforms. Always add transitions for specific interactive elements.",
+    "You MUST NOT center align the app container, ie do not add .App { text-align: center; } in the css file.",
+    "Always use modern button styles like pill-shaped, or sharp button with interaction animations & color relevant to the app style.",
+    "NEVER: use AI assistant Emoji characters like 🤖🧠💭💡🔮🎯 etc for icons. Use lucide-react.",
+    "Every interaction needs micro-animations - hover states, transitions, parallax effects.",
+    "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.",
+    "Prioritize using pre-existing components from src/components/ui when applicable.",
+    "All interactive and key informational elements MUST include a data-testid attribute to facilitate robust automated testing."
+  ],
+  "instructions_to_main_agent": [
+    "Always use the provided JSON theme colors in your Tailwind configuration. Stick to the Australian Green and Gold athletic theme with Obsidian dark mode backgrounds.",
+    "Never use purely transparent headers if content scrolls behind them; use the defined glassmorphism settings.",
+    "Implement FIBA rules / NBL context within the placeholder copy and program logic. Example: references to 'Boomers', 'Opals', 'NBL1', 'Basketball Australia Pathways'.",
+    "Keep spacing generous (p-6, p-8) and avoid cramped UIs. Remember the tactical sports aesthetic.",
+    "For the PDF Export feature, ensure you implement a clean export view for the 10-week plan.",
+    "Create a toggle or distinct UI for Mens/Womens basketball in the builder form.",
+    "Ensure 'mark session complete' interaction is highly visible and satisfying (use a strong accent color and animation).",
+    "Ensure the curated drill library is populated with static JSON data referencing skills from fundamental to professional.",
+    "For the UI, avoid generic SaaS designs. Follow 'The Performance Pro' archetype: high contrast cards, sharp edges, and metric-first presentation."
+  ]
+}

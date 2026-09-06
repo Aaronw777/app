@@ -1,0 +1,28 @@
+{
+  "summary": "First-finish smoke test of Court Mastery basketball training app. Backend auth + program CRUD + session PATCH verified via curl. Full frontend E2E flow verified via Playwright: landing hero -> register -> dashboard -> build program -> program view (10 weeks) -> session view (3 drills, mark complete, save notes) -> completion reflected on program card + progress bar (1/10) -> logout -> protected route redirect. All data-testid selectors present and functional.",
+  "tested_scope": ["frontend", "backend", "auth", "integration"],
+  "passed": [
+    "GET / — landing page loads with 'Build A Player In 10 Weeks' hero and CTAs",
+    "POST /api/auth/register — returns 200 with JWT token; sets cookie",
+    "GET /api/auth/me — 200 with cookie",
+    "POST /api/programs — 200, returns program with 10 sessions",
+    "GET /api/programs — 200, returns list",
+    "PATCH /api/programs/{id}/sessions/1 — 200, marks completed and saves notes",
+    "GET /api/drills — 200, returns drill library",
+    "UI register flow lands on /dashboard and stores cm_token in localStorage",
+    "Dashboard empty state shows Build Program CTA",
+    "Builder form (player name + gender mens + skill developing + age slider) submits and redirects to /programs/:id",
+    "Program view renders 10 week cards",
+    "Session view /programs/:id/week/1 renders 3 drills",
+    "Mark Complete + Save Notes buttons work (session-complete-btn, session-notes-textarea, session-save-notes-btn)",
+    "Program view shows check icon on week 1 and Progress 1/10 after completion",
+    "Dashboard shows the created program card",
+    "Logout clears session and /dashboard redirects to /login when unauthenticated"
+  ],
+  "failed": [],
+  "action_items": [],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "retest_needed": false,
+  "full_testing_deferred": true,
+  "notes": "Console showed benign 401s during initial page load before token attached (auth/me pre-login checks) and 'No available adapters' warnings from YouTube iframes — non-blocking. Delete-program and admin login flows not exercised but non-critical for first finish."
+}

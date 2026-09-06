@@ -1,0 +1,268 @@
+"""
+Curated basketball drill library aligned with FIBA rules and Basketball Australia pathways
+(NBL / NBL1 / Local domestic). Drills are tagged by skill category and difficulty.
+"""
+
+# Skill levels: 1=Fundamental, 2=Developing, 3=Intermediate, 4=Advanced, 5=Professional
+DRILLS = [
+    # BALL HANDLING
+    {"id": "bh01", "name": "Stationary Two-Ball Pounding", "category": "Ball Handling", "level": 1,
+     "duration": 6, "description": "Pound two balls at hip height simultaneously. Keep head up, wide base.",
+     "video": "https://www.youtube.com/embed/JErq0KyOSTU",
+     "coach_notes": "Focus on fingertip control. FIBA travel rules mean clean handles win possessions."},
+    {"id": "bh02", "name": "Cone Zig-Zag Dribble", "category": "Ball Handling", "level": 2,
+     "duration": 8, "description": "6 cones staggered 1m apart. Change hands at each cone with a crossover.",
+     "video": "https://www.youtube.com/embed/DxsTgspEnwI",
+     "coach_notes": "Low athletic stance; ball below the knee. Basketball Australia junior pathway staple."},
+    {"id": "bh03", "name": "Figure-8 Between the Legs", "category": "Ball Handling", "level": 2,
+     "duration": 6, "description": "Weave the ball between your legs in a figure-8 while walking forward.",
+     "video": "https://www.youtube.com/embed/eiodfSMuU_g",
+     "coach_notes": "Keep eyes on target — simulate reading a help defender."},
+    {"id": "bh04", "name": "Two-Ball Crossover Series", "category": "Ball Handling", "level": 3,
+     "duration": 8, "description": "Alternate crossovers, between-the-legs, behind-back with two balls.",
+     "video": "https://www.youtube.com/embed/mAV1JStN4Zk",
+     "coach_notes": "Ambidexterity is non-negotiable at NBL1 level."},
+    {"id": "bh05", "name": "Live-Ball Combo Escape", "category": "Ball Handling", "level": 4,
+     "duration": 10, "description": "From triple-threat, chain hesitation → cross → between-legs → attack.",
+     "video": "https://www.youtube.com/embed/1WvxCn9ETyU",
+     "coach_notes": "Every move must have a purpose. Sell the fake with eyes and shoulders."},
+    {"id": "bh06", "name": "Pro Reaction Handle", "category": "Ball Handling", "level": 5,
+     "duration": 10, "description": "Partner signals direction; execute matching combo move within 0.5s.",
+     "video": "https://www.youtube.com/embed/1WvxCn9ETyU",
+     "coach_notes": "Reactive handles separate NBL guards from domestic players."},
+
+    # SHOOTING
+    {"id": "sh01", "name": "Form Shooting (Close Range)", "category": "Shooting", "level": 1,
+     "duration": 10, "description": "One-hand shooting from 1m. 10 makes each spot: middle, left elbow, right elbow.",
+     "video": "https://www.youtube.com/embed/mn6mCwoOSfM",
+     "coach_notes": "BEEF: Balance, Eyes, Elbow, Follow-through. FIBA 3-point line is 6.75m — build habits early."},
+    {"id": "sh02", "name": "Mikan Layup Series", "category": "Shooting", "level": 1,
+     "duration": 8, "description": "Alternating right and left hand layups continuously under the ring.",
+     "video": "https://www.youtube.com/embed/0hDgeVEIRxk",
+     "coach_notes": "Use the backboard. Basketball Australia mandates ambidextrous finishing at U14+."},
+    {"id": "sh03", "name": "Spot Shooting — 5 Spots", "category": "Shooting", "level": 2,
+     "duration": 10, "description": "Two dribbles in and shoot from 5 perimeter spots. 5 makes each.",
+     "video": "https://www.youtube.com/embed/HeCV61hlOtY",
+     "coach_notes": "Square shoulders to rim. Consistent shot pocket."},
+    {"id": "sh04", "name": "Catch-and-Shoot off Screen", "category": "Shooting", "level": 3,
+     "duration": 10, "description": "Curl or fade off a chair 'screen'. Land in triple-threat.",
+     "video": "https://www.youtube.com/embed/vTAcumemVfM",
+     "coach_notes": "Show hands early — a WNBL/NBL1 habit."},
+    {"id": "sh05", "name": "Step-Back Jumper", "category": "Shooting", "level": 4,
+     "duration": 10, "description": "Attack, plant, step back into a balanced jumper. Both directions.",
+     "video": "https://www.youtube.com/embed/gjeS0oCoJRk",
+     "coach_notes": "FIBA travel: gather step + 2 steps. Practise legal footwork."},
+    {"id": "sh06", "name": "NBA-Range Pull-Up Series", "category": "Shooting", "level": 5,
+     "duration": 12, "description": "Full-court sprint, pull-up jumper at NBA/FIBA 3-point line each end.",
+     "video": "https://www.youtube.com/embed/GNJ2f8AA3zc",
+     "coach_notes": "Legs fresh in Q4 = professional. Condition and shoot."},
+
+    # PASSING
+    {"id": "ps01", "name": "Chest & Bounce Pass Reps", "category": "Passing", "level": 1,
+     "duration": 6, "description": "Partner passes: 20 chest, 20 bounce, 20 overhead.",
+     "video": "https://www.youtube.com/embed/y8Ah4qU4o30",
+     "coach_notes": "Thumbs down on follow through. Bounce pass 2/3 to target."},
+    {"id": "ps02", "name": "Wall Passing Circuit", "category": "Passing", "level": 2,
+     "duration": 8, "description": "45 seconds each: chest, bounce, one-hand push, behind-back to wall.",
+     "video": "https://www.youtube.com/embed/2sZM_pM7Yqs",
+     "coach_notes": "Timing tempo — no soft passes."},
+    {"id": "ps03", "name": "3-Man Weave Full Court", "category": "Passing", "level": 3,
+     "duration": 10, "description": "Classic 3-man weave, finishing with layup. No dribbles.",
+     "video": "https://www.youtube.com/embed/9EEvLXOWUOo",
+     "coach_notes": "Pass and cut behind. Basketball Australia pathway warm-up."},
+    {"id": "ps04", "name": "Pocket Pass off Ball Screen", "category": "Passing", "level": 4,
+     "duration": 10, "description": "Live pick-and-roll reps: attack, pocket pass to roller.",
+     "video": "https://www.youtube.com/embed/0lIbmDeuNzE",
+     "coach_notes": "Read tag defender. Under-19 Boomers/Gems staple."},
+    {"id": "ps05", "name": "Skip Pass Decision Drill", "category": "Passing", "level": 5,
+     "duration": 10, "description": "Live 3-on-3 with 'shell' — must skip pass on 2 rotations.",
+     "video": "https://www.youtube.com/embed/9wjRvxKp0J8",
+     "coach_notes": "Ball movement > player movement at NBL level."},
+
+    # FOOTWORK
+    {"id": "fw01", "name": "Jump Stop & Pivot", "category": "Footwork", "level": 1,
+     "duration": 6, "description": "Jump stop off catch. Pivot forward/reverse on inside foot 10 reps.",
+     "video": "https://www.youtube.com/embed/G7uDPnA8sPY",
+     "coach_notes": "Two-foot jump stop = either foot as pivot (FIBA rule)."},
+    {"id": "fw02", "name": "Triple-Threat Reads", "category": "Footwork", "level": 2,
+     "duration": 6, "description": "Catch → triple-threat → shot fake → jab → sweep. 5 reps each direction.",
+     "video": "https://www.youtube.com/embed/5CIf6Ck4W-4",
+     "coach_notes": "Chin over the ball. Eyes at the rim."},
+    {"id": "fw03", "name": "Euro-Step Finish", "category": "Footwork", "level": 3,
+     "duration": 8, "description": "Two-dribble attack, euro-step around a chair, finish.",
+     "video": "https://www.youtube.com/embed/hE2Zt-djtwc",
+     "coach_notes": "FIBA gather + 2 steps legal. Sell the direction change."},
+    {"id": "fw04", "name": "Reverse Pivot Attack", "category": "Footwork", "level": 4,
+     "duration": 8, "description": "Post catch, reverse pivot into face-up, one-dribble drive.",
+     "video": "https://www.youtube.com/embed/eCyC3E5f2xY",
+     "coach_notes": "NBL bigs like Bryce Cotton screen combos work off pivot mastery."},
+    {"id": "fw05", "name": "Combo Finish Package", "category": "Footwork", "level": 5,
+     "duration": 12, "description": "Chain: hesitation → euro → step-through → reverse layup on both sides.",
+     "video": "https://www.youtube.com/embed/BuInf68q5rY",
+     "coach_notes": "Elite finishers have 5+ counters."},
+
+    # DEFENSE
+    {"id": "df01", "name": "Defensive Stance & Slide", "category": "Defense", "level": 1,
+     "duration": 8, "description": "Sideline to sideline defensive slides — no crossing feet.",
+     "video": "https://www.youtube.com/embed/OuG9L3rccS8",
+     "coach_notes": "Butt down, chest up, hands active. Foundation for everything."},
+    {"id": "df02", "name": "Closeout Drill", "category": "Defense", "level": 2,
+     "duration": 8, "description": "Sprint 4 steps, chop feet last 2, high hand on shooter.",
+     "video": "https://www.youtube.com/embed/USvLwuTf47c",
+     "coach_notes": "Contest without fouling — FIBA cylinder rule."},
+    {"id": "df03", "name": "1-on-1 Live from the Wing", "category": "Defense", "level": 3,
+     "duration": 10, "description": "Wing 1-on-1, defender starts with hand on ball. Force baseline.",
+     "video": "https://www.youtube.com/embed/gRz9Yfum2LM",
+     "coach_notes": "Nose on ball. Take the challenge."},
+    {"id": "df04", "name": "Help & Recover", "category": "Defense", "level": 4,
+     "duration": 10, "description": "2-on-2 with skip pass; help defender must stunt and recover.",
+     "video": "https://www.youtube.com/embed/DKAyQnzYAg8",
+     "coach_notes": "Shell defense principles used by Boomers/Opals."},
+    {"id": "df05", "name": "Pick-and-Roll Defense Reads", "category": "Defense", "level": 5,
+     "duration": 12, "description": "Live PnR reps: drop, hedge, switch. Communicate every screen.",
+     "video": "https://www.youtube.com/embed/fSABBcYNSHc",
+     "coach_notes": "NBL coverage packages start here."},
+
+    # REBOUNDING & FINISHING
+    {"id": "rb01", "name": "Box-Out Fundamentals", "category": "Rebounding", "level": 1,
+     "duration": 6, "description": "Partner shoots; box out with reverse pivot before pursuing ball.",
+     "video": "https://www.youtube.com/embed/BAvzn12QCEQ",
+     "coach_notes": "Find, hit, get. Rebounds = extra possessions."},
+    {"id": "rb02", "name": "Tip Drill", "category": "Rebounding", "level": 2,
+     "duration": 6, "description": "Alternating hands, tip ball off backboard 10 times without catching.",
+     "video": "https://www.youtube.com/embed/RC1YkFPeOG8",
+     "coach_notes": "Vertical jump + timing."},
+    {"id": "rb03", "name": "Superman Rebounding", "category": "Rebounding", "level": 3,
+     "duration": 8, "description": "Toss ball off backboard from wing, sprint and rebound in two-foot power stance.",
+     "video": "https://www.youtube.com/embed/gvS9DrqCLKM",
+     "coach_notes": "Chin the ball, elbows out. FIBA doesn't call soft over-the-back."},
+    {"id": "rb04", "name": "Contact Finish Series", "category": "Rebounding", "level": 4,
+     "duration": 10, "description": "Coach with pad; player attacks and finishes through contact.",
+     "video": "https://www.youtube.com/embed/HxaLdNqBqhQ",
+     "coach_notes": "Absorb, extend, finish high."},
+
+    # CONDITIONING
+    {"id": "cn01", "name": "Line Touches (Suicides)", "category": "Conditioning", "level": 1,
+     "duration": 6, "description": "Full-court suicides: FT → half → far FT → baseline. Rest 30s.",
+     "video": "https://www.youtube.com/embed/EGMK0DcQ7fs",
+     "coach_notes": "Change-of-direction is basketball fitness."},
+    {"id": "cn02", "name": "17s — Sideline to Sideline", "category": "Conditioning", "level": 3,
+     "duration": 5, "description": "17 sideline touches in under 60 seconds. NBL benchmark 65s.",
+     "video": "https://www.youtube.com/embed/pxdmZv9nH50",
+     "coach_notes": "Basketball Australia AIS testing protocol."},
+    {"id": "cn03", "name": "Yo-Yo Intermittent Recovery", "category": "Conditioning", "level": 4,
+     "duration": 10, "description": "20m shuttle with progressive tempo. Track level reached.",
+     "video": "https://www.youtube.com/embed/DePOTfshMzs",
+     "coach_notes": "Used across NBL/WNBL pre-season."},
+
+    # BASKETBALL IQ / TEAM PLAY
+    {"id": "iq01", "name": "Give-and-Go", "category": "Basketball IQ", "level": 1,
+     "duration": 6, "description": "Pass and cut hard to the basket for return pass and layup.",
+     "video": "https://www.youtube.com/embed/gU0e9zXhCMg",
+     "coach_notes": "Cut with intent; hands ready."},
+    {"id": "iq02", "name": "Pick-and-Roll Reads", "category": "Basketball IQ", "level": 3,
+     "duration": 10, "description": "Live 2-on-2 PnR: read drop, switch, hedge coverages.",
+     "video": "https://www.youtube.com/embed/0lIbmDeuNzE",
+     "coach_notes": "PnR is basketball's most-run action at every level."},
+    {"id": "iq03", "name": "Spain Pick-and-Roll", "category": "Basketball IQ", "level": 4,
+     "duration": 12, "description": "Ball screen + back-screen on the drop defender. 3-player action.",
+     "video": "https://www.youtube.com/embed/l0m2iCbtiPY",
+     "coach_notes": "Featured by Boomers at FIBA World Cup. Timing is everything."},
+    {"id": "iq04", "name": "5-on-5 Half-Court Motion", "category": "Basketball IQ", "level": 5,
+     "duration": 15, "description": "Live scrimmage — must pass and cut, no dribbles for first 3 seconds.",
+     "video": "https://www.youtube.com/embed/9wjRvxKp0J8",
+     "coach_notes": "Reads over calls. NBL free-flow offense."},
+
+    # WARM UP
+    {"id": "wu01", "name": "Dynamic Warm-Up", "category": "Warm-Up", "level": 1,
+     "duration": 8, "description": "High knees, butt kicks, lateral lunges, inchworms, arm circles.",
+     "video": "https://www.youtube.com/embed/L_xrDAtykMI",
+     "coach_notes": "Never skip. FIBA injury data shows warm-up cuts ACL risk."},
+    {"id": "wu02", "name": "Reactive Agility Warm-Up", "category": "Warm-Up", "level": 3,
+     "duration": 8, "description": "Coach points direction; player sprints/slides/back-pedals accordingly.",
+     "video": "https://www.youtube.com/embed/L_xrDAtykMI",
+     "coach_notes": "Central nervous system prep for competitive intensity."},
+]
+
+# 10-Week Program Blueprint — themes progressing from fundamental → professional
+WEEKS_BLUEPRINT = [
+    {"week": 1, "theme": "Foundations & Footwork", "focus": ["Warm-Up", "Footwork", "Ball Handling"]},
+    {"week": 2, "theme": "Ball Handling Mastery", "focus": ["Warm-Up", "Ball Handling", "Conditioning"]},
+    {"week": 3, "theme": "Shooting Mechanics", "focus": ["Warm-Up", "Shooting", "Footwork"]},
+    {"week": 4, "theme": "Passing & Court Vision", "focus": ["Warm-Up", "Passing", "Basketball IQ"]},
+    {"week": 5, "theme": "1-on-1 Offence", "focus": ["Warm-Up", "Footwork", "Shooting"]},
+    {"week": 6, "theme": "Defensive Principles", "focus": ["Warm-Up", "Defense", "Conditioning"]},
+    {"week": 7, "theme": "Rebounding & Finishing", "focus": ["Warm-Up", "Rebounding", "Shooting"]},
+    {"week": 8, "theme": "Pick-and-Roll Concepts", "focus": ["Warm-Up", "Basketball IQ", "Passing"]},
+    {"week": 9, "theme": "Team Play Integration", "focus": ["Warm-Up", "Basketball IQ", "Defense"]},
+    {"week": 10, "theme": "Game Simulation & Assessment", "focus": ["Warm-Up", "Basketball IQ", "Conditioning"]},
+]
+
+# Skill level mapping — starting level shifts the drill difficulty band per week
+LEVEL_MAP = {
+    "fundamental": [1, 1, 1, 2, 2, 2, 2, 3, 3, 3],
+    "developing":  [1, 2, 2, 2, 3, 3, 3, 3, 4, 4],
+    "intermediate":[2, 2, 3, 3, 3, 4, 4, 4, 4, 5],
+    "advanced":    [3, 3, 4, 4, 4, 4, 5, 5, 5, 5],
+    "professional":[4, 4, 4, 5, 5, 5, 5, 5, 5, 5],
+}
+
+
+def _pick_drill(category: str, level: int):
+    """Pick the drill in `category` whose level is closest to `level` (prefer equal or lower)."""
+    candidates = [d for d in DRILLS if d["category"] == category]
+    if not candidates:
+        return None
+    # Sort by distance, prefer <= level
+    candidates.sort(key=lambda d: (abs(d["level"] - level), d["level"] > level))
+    return candidates[0]
+
+
+def build_program(gender: str, starting_age: int, skill_level: str) -> list:
+    """Return a list of 10 session objects."""
+    skill_level = skill_level.lower()
+    if skill_level not in LEVEL_MAP:
+        skill_level = "developing"
+
+    level_progression = LEVEL_MAP[skill_level]
+    sessions = []
+
+    for wk in WEEKS_BLUEPRINT:
+        week_level = level_progression[wk["week"] - 1]
+        drills = []
+        # Session structure: 1 warm-up + 3 skill blocks fitting a 60min session
+        for category in wk["focus"]:
+            drill = _pick_drill(category, week_level)
+            if drill:
+                drills.append(drill)
+
+        # Add a closing IQ / application piece if space permits
+        if wk["week"] >= 4 and "Basketball IQ" not in wk["focus"]:
+            iq = _pick_drill("Basketball IQ", week_level)
+            if iq:
+                drills.append(iq)
+
+        total = sum(d["duration"] for d in drills)
+        # Fill to ~55 min with an additional drill from the primary focus if under
+        primary = wk["focus"][1] if len(wk["focus"]) > 1 else wk["focus"][0]
+        while total < 50:
+            extra = _pick_drill(primary, week_level)
+            if not extra or extra in drills:
+                break
+            drills.append(extra)
+            total += extra["duration"]
+
+        sessions.append({
+            "week": wk["week"],
+            "theme": wk["theme"],
+            "target_level": week_level,
+            "total_minutes": total,
+            "drills": drills,
+            "coach_reference": (
+                f"{'Opals / WNBL' if gender == 'womens' else 'Boomers / NBL'} pathway • "
+                f"Age {starting_age}+ • FIBA rules"
+            ),
+            "completed": False,
+            "notes": "",
+        })
+    return sessions
