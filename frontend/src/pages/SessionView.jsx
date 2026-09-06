@@ -6,6 +6,7 @@ import SessionTimer from "@/components/SessionTimer";
 import CourtDiagram from "@/components/CourtDiagram";
 import DrillPicker from "@/components/DrillPicker";
 import CustomDrillForm from "@/components/CustomDrillForm";
+import TechniqueIllustration from "@/components/TechniqueIllustration";
 import { toast } from "sonner";
 
 export default function SessionView() {
@@ -287,6 +288,7 @@ export default function SessionView() {
                   </div>
                   {d.coach_notes}
                 </div>
+                <TechniqueIllustration category={d.category} />
                 {(() => {
                   const searchQuery = encodeURIComponent(`${d.name} basketball drill tutorial`);
                   const watchUrl = `https://www.youtube.com/results?search_query=${searchQuery}`;
