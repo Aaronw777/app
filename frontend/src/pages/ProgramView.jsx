@@ -119,15 +119,20 @@ export default function ProgramView() {
             <p className="text-sm mb-6">
               {program.player_name} · {s.total_minutes} minutes · Tier {s.target_level}
             </p>
-            {s.drills.map((d) => (
-              <div key={d.id} className="mb-4 pb-4 border-b">
-                <div className="font-semibold">
-                  {d.name} ({d.duration} min) — {d.category}
+            {s.drills.map((d) => {
+              const m = (d.video || "").match(/embed\/([\w-]+)/);
+              const watch = m ? `https://www.youtube.com/watch?v=${m[1]}` : "";
+              return (
+                <div key={d.id} className="mb-4 pb-4 border-b">
+                  <div className="font-semibold">
+                    {d.name} ({d.duration} min) — {d.category}
+                  </div>
+                  <div className="text-sm">{d.description}</div>
+                  <div className="text-xs italic mt-1">Coach: {d.coach_notes}</div>
+                  {watch && <div className="text-xs mt-1">Video: {watch}</div>}
                 </div>
-                <div className="text-sm">{d.description}</div>
-                <div className="text-xs italic mt-1">Coach: {d.coach_notes}</div>
-              </div>
-            ))}
+              );
+            })}
             {s.notes && (
               <div className="mt-4 text-sm">
                 <strong>Coach notes:</strong> {s.notes}
