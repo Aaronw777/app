@@ -98,6 +98,31 @@ def _get(path: str) -> tuple[bytes, str]:
     return resp.content, resp.headers.get("Content-Type", "application/octet-stream")
 
 
+def open_stream(path: str):
+    """Return a live `requests.Response` object with stream=True.
+    Caller MUST close it (or use `with`) — used by StreamingResponse for chunked
+    downloads so we don't buffer 500MB videos into RAM.
+    """
+    key = init_storage()
+    resp = requests.get(
+        f"{STORAGE_URL}/objects/{path}",
+        headers={"X-Storage-Key": key},
+        stream=True,
+        timeout=120,
+    )
+    if resp.status_code == 404:
+        resp.close()
+        key = init_storage(force=True)
+        resp = requests.get(
+            f"{STORAGE_URL}/objects/{path}",
+            headers={"X-Storage-Key": key},
+            stream=True,
+            timeout=120,
+        )
+    resp.raise_for_status()
+    return resp
+
+
 def upload_bytes(user_id: str, kind: str, data: bytes, content_type: str, ext: str | None) -> dict:
     """kind: 'team-logo' | 'player-photo' | 'drill-media' | 'session-photo' | 'program-cover'"""
     if content_type not in ALLOWED:

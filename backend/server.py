@@ -14,6 +14,7 @@ from typing import List, Optional, Literal
 import bcrypt
 import jwt
 from fastapi import FastAPI, APIRouter, HTTPException, Depends, Request, Response, UploadFile, File, Form, Query, Header
+from fastapi.responses import StreamingResponse
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
@@ -141,6 +142,68 @@ class PlayerAdd(BaseModel):
 class RosterSessionUpdate(BaseModel):
     completed: Optional[bool] = None
     notes: Optional[str] = None
+
+
+class PlayerBioUpdate(BaseModel):
+    name: Optional[str] = Field(default=None, min_length=1, max_length=80)
+    number: Optional[str] = Field(default=None, max_length=6)
+    position: Optional[str] = Field(default=None, max_length=32)
+    stats: Optional[dict] = None  # {games_played, points_3s, points_2s, points_1s, total_fouls}
+
+
+class TeamJoinInput(BaseModel):
+    code: str = Field(min_length=4, max_length=12)
+
+
+_STAT_KEYS = ("games_played", "points_3s", "points_2s", "points_1s", "total_fouls")
+
+
+def _default_stats() -> dict:
+    return {k: 0 for k in _STAT_KEYS}
+
+
+def _clean_stats(raw) -> dict:
+    if not isinstance(raw, dict):
+        return _default_stats()
+    out = _default_stats()
+    for k in _STAT_KEYS:
+        try:
+            v = int(raw.get(k, 0) or 0)
+        except (TypeError, ValueError):
+            v = 0
+        out[k] = max(0, min(v, 99999))
+    return out
+
+
+def _gen_invite_code() -> str:
+    # 6-digit numeric, zero-padded
+    return f"{secrets.randbelow(1_000_000):06d}"
+
+
+async def _ensure_team_invite_code(team: dict) -> str:
+    """Return an existing invite_code or lazily generate one (retries on collision)."""
+    if team.get("invite_code"):
+        return team["invite_code"]
+    for _ in range(10):
+        code = _gen_invite_code()
+        clash = await db.teams.find_one({"invite_code": code}, {"_id": 0, "id": 1})
+        if not clash:
+            await db.teams.update_one({"id": team["id"]}, {"$set": {"invite_code": code}})
+            team["invite_code"] = code
+            return code
+    raise HTTPException(status_code=500, detail="Could not allocate invite code")
+
+
+async def _team_for_user(team_id: str, user_id: str, *, require_owner: bool = False) -> dict:
+    """Fetch team where user is owner OR (unless require_owner) in assistant_ids."""
+    q = {"id": team_id, "user_id": user_id} if require_owner else {
+        "id": team_id,
+        "$or": [{"user_id": user_id}, {"assistant_ids": user_id}],
+    }
+    team = await db.teams.find_one(q, {"_id": 0})
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+    return team
 
 
 # ============ Auth routes ============
@@ -317,12 +380,20 @@ async def create_team(payload: TeamCreate, user: dict = Depends(get_current_user
     if not program:
         raise HTTPException(status_code=404, detail="Program not found")
     team_id = str(uuid.uuid4())
+    # Allocate a unique invite code (best-effort, retry on collision).
+    invite_code = _gen_invite_code()
+    for _ in range(10):
+        if not await db.teams.find_one({"invite_code": invite_code}, {"_id": 0, "id": 1}):
+            break
+        invite_code = _gen_invite_code()
     doc = {
         "id": team_id,
         "user_id": user["id"],
         "name": payload.name.strip(),
         "program_id": payload.program_id,
         "roster": [],
+        "invite_code": invite_code,
+        "assistant_ids": [],
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     await db.teams.insert_one(doc)
@@ -332,36 +403,57 @@ async def create_team(payload: TeamCreate, user: dict = Depends(get_current_user
 
 @api_router.get("/teams")
 async def list_teams(user: dict = Depends(get_current_user)):
-    teams = await db.teams.find({"user_id": user["id"]}, {"_id": 0}).sort("created_at", -1).to_list(100)
-    # Attach program name for display
+    teams = await db.teams.find(
+        {"$or": [{"user_id": user["id"]}, {"assistant_ids": user["id"]}]},
+        {"_id": 0},
+    ).sort("created_at", -1).to_list(100)
+    # Attach program name for display — programs are owned by the head coach, so
+    # look up by the team's user_id rather than the current user.
     program_ids = list({t["program_id"] for t in teams})
+    owner_ids = list({t["user_id"] for t in teams})
     programs = await db.programs.find(
-        {"id": {"$in": program_ids}, "user_id": user["id"]},
-        {"_id": 0, "id": 1, "player_name": 1, "skill_level": 1, "sessions": 1},
+        {"id": {"$in": program_ids}, "user_id": {"$in": owner_ids}},
+        {"_id": 0, "id": 1, "user_id": 1, "player_name": 1, "skill_level": 1, "sessions": 1},
     ).to_list(200)
-    program_lookup = {p["id"]: p for p in programs}
+    program_lookup = {(p["user_id"], p["id"]): p for p in programs}
     for t in teams:
-        p = program_lookup.get(t["program_id"])
+        p = program_lookup.get((t["user_id"], t["program_id"]))
         t["program_name"] = p["player_name"] if p else "Deleted program"
         t["program_skill_level"] = p["skill_level"] if p else None
         t["total_weeks"] = len(p["sessions"]) if p else 10
         t["roster_count"] = len(t.get("roster", []))
+        t["role"] = "owner" if t["user_id"] == user["id"] else "assistant"
     return teams
 
 
 @api_router.get("/teams/{team_id}")
 async def get_team(team_id: str, user: dict = Depends(get_current_user)):
-    team = await db.teams.find_one({"id": team_id, "user_id": user["id"]}, {"_id": 0})
-    if not team:
-        raise HTTPException(status_code=404, detail="Team not found")
-    program = await db.programs.find_one({"id": team["program_id"], "user_id": user["id"]}, {"_id": 0})
+    team = await _team_for_user(team_id, user["id"])
+    is_owner = team["user_id"] == user["id"]
+    # Programs are owned by the head coach.
+    program = await db.programs.find_one({"id": team["program_id"], "user_id": team["user_id"]}, {"_id": 0})
     if program:
-        # Slim program sessions (theme only, no drill payload)
         program["sessions_summary"] = [
             {"week": s["week"], "theme": s["theme"], "total_minutes": s["total_minutes"], "target_level": s["target_level"]}
             for s in program.get("sessions", [])
         ]
     team["program"] = program
+    team["role"] = "owner" if is_owner else "assistant"
+    # Ensure invite_code exists (backfill for older teams).
+    if is_owner:
+        await _ensure_team_invite_code(team)
+    else:
+        # Hide invite code from assistants
+        team.pop("invite_code", None)
+    # Attach assistant emails (head coach only) for management UI.
+    if is_owner and team.get("assistant_ids"):
+        users = await db.users.find(
+            {"id": {"$in": team["assistant_ids"]}},
+            {"_id": 0, "id": 1, "email": 1, "name": 1},
+        ).to_list(50)
+        team["assistants"] = users
+    else:
+        team["assistants"] = []
     return team
 
 
@@ -373,14 +465,67 @@ async def delete_team(team_id: str, user: dict = Depends(get_current_user)):
     return {"ok": True}
 
 
+# --- Assistant coach invitation ---
+@api_router.post("/teams/{team_id}/invite-code/rotate")
+async def rotate_invite_code(team_id: str, user: dict = Depends(get_current_user)):
+    team = await _team_for_user(team_id, user["id"], require_owner=True)
+    code = _gen_invite_code()
+    for _ in range(10):
+        if not await db.teams.find_one({"invite_code": code}, {"_id": 0, "id": 1}):
+            break
+        code = _gen_invite_code()
+    await db.teams.update_one({"id": team["id"]}, {"$set": {"invite_code": code}})
+    return {"invite_code": code}
+
+
+@api_router.post("/teams/join")
+async def join_team(payload: TeamJoinInput, user: dict = Depends(get_current_user)):
+    code = payload.code.strip()
+    team = await db.teams.find_one({"invite_code": code}, {"_id": 0})
+    if not team:
+        raise HTTPException(status_code=404, detail="Invalid invite code")
+    if team["user_id"] == user["id"]:
+        raise HTTPException(status_code=400, detail="You are the head coach of this team")
+    if user["id"] in team.get("assistant_ids", []):
+        return {"team_id": team["id"], "already_member": True}
+    await db.teams.update_one(
+        {"id": team["id"]},
+        {"$addToSet": {"assistant_ids": user["id"]}},
+    )
+    return {"team_id": team["id"], "already_member": False}
+
+
+@api_router.delete("/teams/{team_id}/assistants/{assistant_id}")
+async def remove_assistant(team_id: str, assistant_id: str, user: dict = Depends(get_current_user)):
+    team = await _team_for_user(team_id, user["id"], require_owner=True)
+    if assistant_id not in team.get("assistant_ids", []):
+        raise HTTPException(status_code=404, detail="Assistant not found")
+    await db.teams.update_one(
+        {"id": team["id"]},
+        {"$pull": {"assistant_ids": assistant_id}},
+    )
+    return {"ok": True}
+
+
+@api_router.post("/teams/{team_id}/leave")
+async def leave_team(team_id: str, user: dict = Depends(get_current_user)):
+    team = await db.teams.find_one({"id": team_id}, {"_id": 0})
+    if not team or user["id"] not in team.get("assistant_ids", []):
+        raise HTTPException(status_code=404, detail="Team not found")
+    await db.teams.update_one({"id": team_id}, {"$pull": {"assistant_ids": user["id"]}})
+    return {"ok": True}
+
+
 @api_router.post("/teams/{team_id}/players")
 async def add_player(team_id: str, payload: PlayerAdd, user: dict = Depends(get_current_user)):
-    team = await db.teams.find_one({"id": team_id, "user_id": user["id"]})
-    if not team:
-        raise HTTPException(status_code=404, detail="Team not found")
+    team = await _team_for_user(team_id, user["id"], require_owner=True)
     player = {
         "player_id": str(uuid.uuid4()),
         "player_name": payload.name.strip(),
+        "number": "",
+        "position": "",
+        "stats": _default_stats(),
+        "attendance": [],
         "added_at": datetime.now(timezone.utc).isoformat(),
         "sessions": {},
     }
@@ -402,6 +547,42 @@ async def remove_player(team_id: str, player_id: str, user: dict = Depends(get_c
     return {"ok": True}
 
 
+@api_router.patch("/teams/{team_id}/players/{player_id}")
+async def update_player_bio(
+    team_id: str,
+    player_id: str,
+    payload: PlayerBioUpdate,
+    user: dict = Depends(get_current_user),
+):
+    # Bio & season stats are head-coach only. Assistants can only mark
+    # attendance and update photos.
+    team = await _team_for_user(team_id, user["id"], require_owner=True)
+    roster = team.get("roster", [])
+    updated = False
+    for p in roster:
+        if p["player_id"] == player_id:
+            if payload.name is not None:
+                p["player_name"] = payload.name.strip()[:80] or p.get("player_name", "")
+            if payload.number is not None:
+                p["number"] = payload.number.strip()[:6]
+            if payload.position is not None:
+                p["position"] = payload.position.strip()[:32]
+            if payload.stats is not None:
+                p["stats"] = _clean_stats(payload.stats)
+            # Keep older docs valid.
+            p.setdefault("attendance", [])
+            p.setdefault("stats", _default_stats())
+            updated = True
+            break
+    if not updated:
+        raise HTTPException(status_code=404, detail="Player not found")
+    await db.teams.update_one(
+        {"id": team_id},
+        {"$set": {"roster": roster}},
+    )
+    return {"ok": True}
+
+
 @api_router.patch("/teams/{team_id}/players/{player_id}/sessions/{week}")
 async def update_roster_session(
     team_id: str,
@@ -410,26 +591,40 @@ async def update_roster_session(
     payload: RosterSessionUpdate,
     user: dict = Depends(get_current_user),
 ):
-    team = await db.teams.find_one({"id": team_id, "user_id": user["id"]})
-    if not team:
-        raise HTTPException(status_code=404, detail="Team not found")
+    team = await _team_for_user(team_id, user["id"])
     roster = team.get("roster", [])
     updated = False
     for p in roster:
         if p["player_id"] == player_id:
             sess = p.setdefault("sessions", {})
             entry = sess.get(str(week), {"completed": False, "notes": ""})
+            was_completed = bool(entry.get("completed"))
             if payload.completed is not None:
                 entry["completed"] = payload.completed
             if payload.notes is not None:
                 entry["notes"] = payload.notes
             sess[str(week)] = entry
+
+            # Auto-log attendance when transitioning to completed=true.
+            attendance = p.setdefault("attendance", [])
+            if payload.completed is True and not was_completed:
+                # Only append once per week
+                if not any(a.get("week") == week for a in attendance):
+                    attendance.append({
+                        "week": week,
+                        "date": datetime.now(timezone.utc).isoformat(),
+                        "marked_by": user["id"],
+                        "marked_by_name": user.get("name", ""),
+                    })
+            elif payload.completed is False and was_completed:
+                # Remove attendance entry for that week if user un-ticked
+                p["attendance"] = [a for a in attendance if a.get("week") != week]
             updated = True
             break
     if not updated:
         raise HTTPException(status_code=404, detail="Player not found")
     await db.teams.update_one(
-        {"id": team_id, "user_id": user["id"]},
+        {"id": team_id},
         {"$set": {"roster": roster}},
     )
     return {"ok": True}
@@ -486,7 +681,7 @@ async def download_media(
     request: Request,
     auth: Optional[str] = Query(None),
 ):
-    # Support auth via cookie, Authorization header, or ?auth=<token> (for <img src>).
+    # Support auth via cookie, Authorization header, or ?auth=<token> (for <img src> / <video src>).
     token = request.cookies.get("access_token")
     if not token:
         header = request.headers.get("Authorization", "")
@@ -508,15 +703,85 @@ async def download_media(
     if record["user_id"] != payload.get("sub"):
         raise HTTPException(status_code=403, detail="Forbidden")
 
+    content_type = record.get("content_type") or "application/octet-stream"
+    total_size = int(record.get("size") or 0)
+    range_header = request.headers.get("range") or request.headers.get("Range")
+    is_video = content_type.startswith("video/")
+
+    # Open a streaming connection to object storage (65KB chunks, no RAM spike).
     try:
-        data, ct = storage_mod.download(record["storage_path"])
+        upstream = storage_mod.open_stream(record["storage_path"])
     except Exception as e:
         logger.exception("Storage download failed")
         raise HTTPException(status_code=502, detail=f"Storage download failed: {e}")
-    return Response(
-        content=data,
-        media_type=record.get("content_type") or ct,
-        headers={"Cache-Control": "private, max-age=3600"},
+
+    # Parse Range: bytes=start-end (video seek). Skip if not a video or malformed.
+    start, end = 0, total_size - 1 if total_size else None
+    partial = False
+    if range_header and is_video and total_size:
+        try:
+            units, _, rng = range_header.partition("=")
+            if units.strip().lower() == "bytes":
+                s, _, e = rng.partition("-")
+                start = int(s) if s.strip() else 0
+                end = int(e) if e.strip() else total_size - 1
+                if start < 0 or end >= total_size or start > end:
+                    start, end = 0, total_size - 1
+                else:
+                    partial = True
+        except (ValueError, AttributeError):
+            partial = False
+
+    def _iter_full():
+        try:
+            for chunk in upstream.iter_content(chunk_size=65536):
+                if chunk:
+                    yield chunk
+        finally:
+            upstream.close()
+
+    def _iter_range(begin: int, finish: int):
+        remaining_skip = begin
+        remaining_yield = finish - begin + 1
+        try:
+            for chunk in upstream.iter_content(chunk_size=65536):
+                if not chunk:
+                    continue
+                if remaining_skip:
+                    if len(chunk) <= remaining_skip:
+                        remaining_skip -= len(chunk)
+                        continue
+                    chunk = chunk[remaining_skip:]
+                    remaining_skip = 0
+                if len(chunk) >= remaining_yield:
+                    yield chunk[:remaining_yield]
+                    return
+                yield chunk
+                remaining_yield -= len(chunk)
+        finally:
+            upstream.close()
+
+    headers = {
+        "Accept-Ranges": "bytes" if is_video else "none",
+        "Cache-Control": "private, max-age=3600",
+    }
+    if partial:
+        headers["Content-Range"] = f"bytes {start}-{end}/{total_size}"
+        headers["Content-Length"] = str(end - start + 1)
+        return StreamingResponse(
+            _iter_range(start, end),
+            status_code=206,
+            media_type=content_type,
+            headers=headers,
+        )
+
+    if total_size:
+        headers["Content-Length"] = str(total_size)
+    return StreamingResponse(
+        _iter_full(),
+        status_code=200,
+        media_type=content_type,
+        headers=headers,
     )
 
 
@@ -562,9 +827,7 @@ async def set_player_photo(
     payload: PlayerPhotoUpdate,
     user: dict = Depends(get_current_user),
 ):
-    team = await db.teams.find_one({"id": team_id, "user_id": user["id"]})
-    if not team:
-        raise HTTPException(status_code=404, detail="Team not found")
+    team = await _team_for_user(team_id, user["id"])
     updated = False
     for p in team.get("roster", []):
         if p["player_id"] == player_id:
@@ -574,7 +837,7 @@ async def set_player_photo(
     if not updated:
         raise HTTPException(status_code=404, detail="Player not found")
     await db.teams.update_one(
-        {"id": team_id, "user_id": user["id"]},
+        {"id": team_id},
         {"$set": {"roster": team["roster"]}},
     )
     return {"ok": True}
@@ -603,6 +866,8 @@ async def startup():
     await db.users.create_index("email", unique=True)
     await db.programs.create_index("user_id")
     await db.teams.create_index("user_id")
+    await db.teams.create_index("assistant_ids")
+    await db.teams.create_index("invite_code", unique=True, sparse=True)
     await db.media.create_index("user_id")
 
     # Warm up storage session (non-fatal on failure)

@@ -1,5 +1,5 @@
 """
-Generates the shareable Court Mastery feature-list PDF into:
+Generates the shareable Court Mastery user-guide PDF into:
   /app/frontend/public/court-mastery-features.pdf
 
 Ships publicly at <frontend origin>/court-mastery-features.pdf.
@@ -21,6 +21,7 @@ from reportlab.platypus import (
     Table,
     TableStyle,
     PageBreak,
+    KeepTogether,
 )
 
 OUT = Path("/app/frontend/public/court-mastery-features.pdf")
@@ -32,132 +33,202 @@ MID = HexColor("#3a3a3a")
 LIGHT = HexColor("#7a7a7a")
 ORANGE = HexColor("#FF7324")
 GREEN = HexColor("#00854A")
+PANEL = HexColor("#f6f6f6")
 
+# Each entry: (Section Title, One-line summary, ["Step 1...", "Step 2..."])
 FEATURES = [
-    ("Program Builder", [
-        "10-week training blueprint generated from four inputs",
-        "Configurable gender: Mens or Womens stream",
-        "Configurable starting age: 4 to 35+ (slider with Aussie Hoops / Junior / Senior waypoints)",
-        "Six skill tiers: Mini-Ballers, Fundamental, Developing, Intermediate, Advanced, Expert",
-        "Programs automatically ladder in difficulty week over week",
-        "Session length adapts to skill tier (~42 min for Mini-Ballers, ~55 min for older tiers)",
-    ]),
-    ("Curated Drill Library (54+ drills)", [
-        "8 categories: Warm-Up, Ball Handling, Shooting, Passing, Footwork, Defense, Rebounding, Conditioning, Basketball IQ",
-        "Each drill tagged with category, minutes, difficulty (0-5), description, coach notes",
-        "14 dedicated Aussie-Hoops-style Level 0 drills for ages 4-7",
-        "References FIBA-style rules and Australian junior-to-elite pathway concepts",
-    ]),
-    ("Session View — Training Day", [
-        "Sticky Session Timer at the top of every session",
-        "MM:SS countdown, ticks at 1 Hz, auto-advances to next drill with a beep",
-        "Play / Pause / Skip Forward / Skip Back / Reset controls",
-        "Drill counter (e.g. \"Drill 1 / 6\")",
-        "SVG Court Diagram per drill (category-specific overlays: cones, pass lines, defensive slides, sprint lanes, etc.)",
-        "YouTube search link under Coach Notes for a demo tutorial",
-        "Mark session complete toggle + per-session coach notes",
-    ]),
-    ("Amend Session — Coach Customisation", [
-        "Amend any session's drill list in edit mode",
-        "Add drills from the searchable, category- and level-filterable Drill Library",
-        "Add fully custom drills (name, category, duration, level, description, coach notes)",
-        "Reorder drills up/down; remove any drill",
-        "Coach's Own drills tagged visibly on the card",
-        "Live minute total updates as you edit; backend recomputes on save",
-        "Team-scale changes: because teams share the program, edits propagate to every player",
-    ]),
-    ("Program View", [
-        "Grid of 10 week cards with theme, drill count, minutes, tier",
-        "Overall completion progress bar",
-        "Completed weeks marked with a gold check badge",
-        "Per-week Parent Handout shortcut",
-        "Create Team shortcut (start a new team using this program)",
-        "Export to PDF button — print-optimised layout with all 10 weeks",
-    ]),
-    ("Parent Handout — Take-Home Sheet", [
-        "Route: /programs/:id/week/:week/handout",
-        "One-page black-on-white printable summary for parents/players",
-        "Numbered drills with descriptions and coach hints",
-        "3-star \"Rate it\" boxes per drill",
-        "\"This week I felt...\" emoji reflection row",
-        "Mini-Ballers programs get an extra \"Grown-up tips\" panel",
-        "YouTube example URL listed under each coach hint (survives printing)",
-    ]),
-    ("Team Roster Board", [
-        "/teams — grid of every team (name, program, roster count, week count)",
-        "Create a team from any existing program",
-        "Add / remove players",
-        "Players x Weeks completion grid — click any cell to toggle a check",
-        "Live \"Done\" counter per player (e.g. 3 / 10)",
-        "Print roster button",
-        "Deleting a program cleans up any linked teams",
-    ]),
-    ("Dashboard", [
-        "Card view of every saved program per user",
-        "Progress percentage + completed count per program",
-        "Quick create / delete",
-        "Empty state with a Build Program CTA",
-    ]),
-    ("Landing Page", [
-        "Athletic-magazine hero (Anton display font, Australian gold + green accents)",
-        "Program preview snapshot (weeks 1, 4, 8, 10 themes)",
-        "4-stat strip: 10 weeks, 60 minutes, 40+ drills, 6 skill tiers",
-        "Feature grid: Personalised Plan, Aussie Pathway, Video Illustrations, Track & Print",
-        "CTAs to register or sign in",
-    ]),
-    ("Authentication", [
-        "Email + password registration and login",
-        "Bcrypt password hashing",
-        "JWT access token (24-hour expiry)",
-        "HTTP-only secure cookies + Bearer-token fallback (works with third-party cookies blocked)",
-        "Auto-seeded admin account on first startup",
-        "Protected routes redirect to /login when unauthenticated",
-        "Clean logout",
-    ]),
-    ("Progress Tracking", [
-        "Mark any session complete (toggleable)",
-        "Save coach notes per session",
-        "Progress percentage on Dashboard and Program view",
-        "Independent progress per player when using Team Roster",
-    ]),
-    ("Print / PDF Export", [
-        "Every page has a print-optimised layout",
-        "window.print() triggers native browser PDF export",
-        "Court diagrams render in print",
-        "Session and Program-level PDFs available",
-        "Parent Handout is its own print-ready page",
-        "Team roster prints as a clean checklist grid",
-    ]),
-    ("Legal / Compliance", [
-        "Full site-wide disclaimer",
-        "No implication of affiliation with Basketball Australia, NBL, WNBL, NBL1, Aussie Hoops, Boomers, Opals or FIBA",
-        "All trademark references used descriptively only",
-        "Video links go to YouTube search (not tied to any specific creator)",
-        "Hero photo under Unsplash license",
-        "Fonts (Anton, DM Sans) under SIL Open Font License",
-        "shadcn/ui, lucide-react and other libraries MIT-licensed",
-    ]),
-    ("Design System", [
-        "Dark \"Performance Pro\" aesthetic",
-        "Anton (display) + DM Sans (body) typography",
-        "Australian gold #FFCD00, NBL green #006400, Action orange #FF7324",
-        "Subtle grain texture on every page",
-        "Micro-animations: hover translate, staggered entrance, custom scrollbar, gold selection",
-        "Sharp-edged tactical cards, uppercase headings, monospace URLs, pill-tag metadata",
-    ]),
-    ("Quality & Testing", [
-        "100% pass on the backend test suite (Auth, Programs, Teams, Amend — 35+ pytest cases)",
-        "100% pass on the frontend Playwright E2E suite",
-        "Stable data-testid attributes on every interactive element",
-    ]),
+    (
+        "1. Sign Up & Sign In",
+        "Create an account so your programs, teams and media stay saved across devices.",
+        [
+            "Go to the landing page and tap Register.",
+            "Enter your name, email and a password (minimum 6 characters).",
+            "Tap Create Account — you'll land straight on the Dashboard.",
+            "Next time, tap Login and enter your email + password.",
+            "Sessions last 24 hours. Tap Logout in the top nav bar to end early.",
+        ],
+    ),
+    (
+        "2. Build a 10-Week Program",
+        "The Program Builder auto-generates a full 10-week training ladder from four inputs.",
+        [
+            "On the Dashboard, tap New Program (top-right).",
+            "Enter the player's name (e.g. \"Under-12 Squad\").",
+            "Toggle Mens or Womens.",
+            "Slide Starting Age to the correct age (4 through 35+). Ages 4-7 unlock the Aussie-Hoops-style Mini-Ballers tier.",
+            "Pick a Skill Level: Mini-Ballers, Fundamental, Developing, Intermediate, Advanced, Expert or Professional.",
+            "Tap Build 10-Week Program. The system creates 10 progressively harder sessions and returns you to the Dashboard card view.",
+        ],
+    ),
+    (
+        "3. Program Cover Hype Reel",
+        "Give any program a motion cover — an image thumbnail or a muted-autoplay video reel.",
+        [
+            "Open the program (Dashboard → Open Program).",
+            "Next to the title, tap the large square placeholder marked Upload.",
+            "Pick any image (JPG, PNG, WebP, HEIC up to 25MB) or a video (MP4, MOV, WebM, AVI, MKV, 3GP up to 500MB).",
+            "The cover instantly saves. Return to the Dashboard — video covers play as a muted, looping hype reel behind the program card.",
+            "Tap the × on the placeholder to remove it, then upload another to swap.",
+        ],
+    ),
+    (
+        "4. Session View — Run a Training Day",
+        "The core coaching screen: drill list, timer, key points and coach notes.",
+        [
+            "From the Program view, tap any week (W01…W10).",
+            "Read the drill list at the top — each drill shows minutes, category and difficulty level.",
+            "Tap the Session Timer play button to start the auto-advancing MM:SS countdown. It beeps and jumps to the next drill when time is up.",
+            "Use ⏮ / ⏭ / ⏸ / ▶ / Reset controls to move around drills manually.",
+            "Under each drill, review the Key Points bullets (the specific coaching cues for that drill).",
+            "Tap the YouTube link under Coach Notes to open a search for that drill on YouTube.",
+            "Add photos or short video clips with the Session Photos upload block.",
+            "Type Coach Notes in the notes box and toggle Mark Session Complete when you're done.",
+        ],
+    ),
+    (
+        "5. Amend a Session — Custom Drills",
+        "Reshape any pre-built session with your own drills or extra library picks.",
+        [
+            "On any Session View, tap Amend Session.",
+            "Use the Drill Library modal to filter by category and level, then tap Add on a library drill.",
+            "Or tap New Custom Drill to enter name, category, minutes, level, description, coach notes and an optional media clip.",
+            "Reorder drills with the up/down arrows on each card, or tap × to remove a drill.",
+            "The total minutes recalculate live at the top of the list.",
+            "Tap Save Changes. Every player on any team linked to this program picks up the new plan automatically.",
+        ],
+    ),
+    (
+        "6. Team Rosters",
+        "Group players under one program and track everyone on a single completion board.",
+        [
+            "In the top nav, tap Teams then + New Team.",
+            "Enter a team name and choose the training program that will drive the sessions.",
+            "Tap Create Team — you're taken to the roster board.",
+            "Tap the large team-logo upload square to attach a logo (image only, up to 25MB).",
+            "Under Add Player, type a name and tap Add. Repeat for every athlete.",
+            "The board shows one row per player × ten week columns. Tap any cell to tick that player's week complete. Ticking a cell automatically logs a training-attendance record (see feature 8).",
+        ],
+    ),
+    (
+        "7. Player Bio Cards",
+        "Tap-through profile per player with jersey #, position, season stats and attendance log.",
+        [
+            "On a Team Roster board, tap any player's photo/name row.",
+            "The Player Profile modal opens.",
+            "Tap the large photo tile to upload a headshot.",
+            "Edit Name, Jersey # and Position in the top row.",
+            "Under Season Stats, update Games Played, 3-Pointers, 2-Pointers, Free Throws and Total Fouls. Total Points recomputes live (3s×3 + 2s×2 + 1s×1).",
+            "Scroll to Training Attendance to see every session week and date this player was marked complete.",
+            "Tap Save Profile to persist. Assistant coaches see this modal read-only.",
+        ],
+    ),
+    (
+        "8. Attendance Register (Auto)",
+        "Every ticked session on the roster board logs an attendance row automatically.",
+        [
+            "Open a Team Roster board.",
+            "Tap a session cell (e.g. W03) for any player.",
+            "Behind the scenes, an attendance record with the week, current date and the coach's name is appended to that player's profile.",
+            "Un-tick the cell to remove the attendance row for that week.",
+            "View the full attendance history by opening the Player Bio Card (see feature 7).",
+        ],
+    ),
+    (
+        "9. Assistant Coach Access",
+        "Invite another registered user to help run a specific team without giving away the whole account.",
+        [
+            "Owner: open the Team Roster board and find the Assistant Coach Invite panel at the top.",
+            "Tap the 6-digit code once to reveal it, then Copy to send it to the assistant (SMS, email, chat).",
+            "Assistant: create their own Court Mastery account (or log in).",
+            "In the top nav, Assistant taps Teams then Join Team (top-right).",
+            "Enter the 6-digit invite code and tap Join. They're taken straight to the team board.",
+            "Assistant permissions: mark attendance, update player photos, view attendance history. They cannot add/remove players, edit stats, delete the team, or change the team logo.",
+            "Owner can revoke access anytime: tap the × on the assistant's name chip, or Rotate the invite code to invalidate any codes already shared.",
+            "Assistant can leave voluntarily via Teams → hover the team card → tap the leave icon.",
+        ],
+    ),
+    (
+        "10. Session Timer",
+        "A sticky, floating countdown clock that runs a whole session hands-free.",
+        [
+            "On any Session View the timer sits pinned at the top.",
+            "It automatically loads the current drill's duration.",
+            "Tap ▶ Play to start, ⏸ to pause, Reset to reload the current drill's time.",
+            "It ticks at 1 Hz. When it hits 00:00 it plays a beep, auto-advances to the next drill and starts a fresh countdown.",
+            "Use ⏮ / ⏭ to jump back or forward between drills.",
+            "The counter (\"Drill 3 / 6\") shows where you are in the session.",
+        ],
+    ),
+    (
+        "11. Parent Handout",
+        "One-page take-home summary for parents or younger players.",
+        [
+            "Open a Session View.",
+            "Tap Parent Handout in the top-right button row.",
+            "A clean black-on-white printable page opens with the drills numbered, coach hints, 3-star rate boxes and a \"This week I felt…\" emoji row.",
+            "Mini-Baller tier programs get an extra Grown-Up Tips panel.",
+            "Tap Print — your browser's PDF dialog opens. Save or send it home with the player.",
+        ],
+    ),
+    (
+        "12. Print & PDF Export",
+        "Every key page has a print-optimised layout.",
+        [
+            "Dashboard, Program, Session, Roster and Parent Handout all support the browser Print dialog.",
+            "Tap Print Session / Print Roster / Print Program buttons where available, or use Cmd/Ctrl + P.",
+            "The layout hides menus, buttons and modals, keeping content, diagrams and coach notes visible.",
+            "Save as PDF from the browser dialog to archive or share.",
+        ],
+    ),
+    (
+        "13. Media — Photos & Videos",
+        "Attach images and video clips throughout the app. Backed by secure per-user storage.",
+        [
+            "Upload spots: team logo, player photo, custom-drill media, session photos, program cover.",
+            "Images: JPG, PNG, GIF, WebP, HEIC / HEIF up to 25MB.",
+            "Videos: MP4, MOV, WebM, AVI, MKV, 3GP up to 500MB.",
+            "iPhone .mov and Android .3gp files upload without conversion.",
+            "Long videos stream (HTTP Range) — scrubbing works and the server does not buffer the whole file.",
+            "Media is private to your account and served through an authenticated URL.",
+            "Tap × on any upload tile to remove the attached media.",
+        ],
+    ),
+    (
+        "14. PlayHQ Shortcut",
+        "One-tap link out to Basketball Australia's fixtures / stats platform.",
+        [
+            "On the Dashboard, tap the Open PlayHQ tile.",
+            "playhq.com opens in a new tab — use it for real-world fixtures, ladders, registrations and match stats. (Independent third-party site; Court Mastery is not affiliated.)",
+        ],
+    ),
+    (
+        "15. Progressive Web App (PWA)",
+        "Install Court Mastery like a native app on iOS, Android or desktop.",
+        [
+            "iOS: open Court Mastery in Safari → tap the Share icon → Add to Home Screen.",
+            "Android: open in Chrome → tap the three-dot menu → Install app.",
+            "Desktop: tap the install icon in the address bar (Chrome/Edge) or the Install Court Mastery prompt if it appears.",
+            "Once installed it opens in its own window, offline shell loads from the service worker cache, and it behaves like a native app.",
+        ],
+    ),
+    (
+        "16. Drill Library Reference",
+        "54+ curated static drills across skill tiers — no AI, no drift, no copyright risk.",
+        [
+            "Amend Session → Drill Library button opens the searchable modal.",
+            "Filter by category (Ball Handling, Shooting, Defense, Rebounding, Conditioning, Footwork, Passing, Basketball IQ, Warm-Up) and by level (0-5).",
+            "Each drill card shows duration, level, description, coach notes and Key Points.",
+            "The library is versioned in code so drill descriptions stay consistent across every program and printout.",
+        ],
+    ),
 ]
 
 styles = {
     "h1": ParagraphStyle(
         "H1",
         fontName="Helvetica-Bold",
-        fontSize=32,
-        leading=36,
+        fontSize=30,
+        leading=34,
         textColor=INK,
         spaceAfter=6,
     ),
@@ -180,21 +251,37 @@ styles = {
     "h2": ParagraphStyle(
         "H2",
         fontName="Helvetica-Bold",
-        fontSize=15,
-        leading=19,
+        fontSize=14,
+        leading=18,
         textColor=INK,
-        spaceBefore=10,
+        spaceBefore=6,
+        spaceAfter=2,
+    ),
+    "summary": ParagraphStyle(
+        "Summary",
+        fontName="Helvetica-Oblique",
+        fontSize=10,
+        leading=13,
+        textColor=MID,
         spaceAfter=6,
     ),
-    "bullet": ParagraphStyle(
-        "Bullet",
+    "howto": ParagraphStyle(
+        "HowTo",
+        fontName="Helvetica-Bold",
+        fontSize=8.5,
+        leading=11,
+        textColor=ORANGE,
+        spaceAfter=2,
+    ),
+    "step": ParagraphStyle(
+        "Step",
         fontName="Helvetica",
-        fontSize=10.2,
-        leading=15,
+        fontSize=10,
+        leading=14,
         textColor=INK,
         leftIndent=14,
         bulletIndent=2,
-        spaceAfter=1,
+        spaceAfter=0,
         alignment=TA_LEFT,
     ),
     "footer": ParagraphStyle(
@@ -210,7 +297,6 @@ styles = {
 
 def draw_header(canvas, doc):
     canvas.saveState()
-    # Top gold bar with logo mark
     canvas.setFillColor(GOLD)
     canvas.rect(0, A4[1] - 22 * mm, A4[0], 22 * mm, fill=1, stroke=0)
     canvas.setFillColor(INK)
@@ -218,10 +304,9 @@ def draw_header(canvas, doc):
     canvas.drawString(20 * mm, A4[1] - 15 * mm, "COURT MASTERY")
     canvas.setFont("Helvetica", 8)
     canvas.drawRightString(
-        A4[0] - 20 * mm, A4[1] - 15 * mm, "10-WEEK BASKETBALL PROGRAM BUILDER"
+        A4[0] - 20 * mm, A4[1] - 15 * mm, "USER GUIDE · 10-WEEK PROGRAM BUILDER"
     )
 
-    # Footer
     canvas.setFillColor(MID)
     canvas.setStrokeColor(MID)
     canvas.setLineWidth(0.5)
@@ -240,6 +325,19 @@ def draw_header(canvas, doc):
     canvas.restoreState()
 
 
+def feature_block(title, summary, steps):
+    """Return a KeepTogether flowable so a feature never splits across pages."""
+    elems = [
+        Paragraph(title.upper(), styles["h2"]),
+        Paragraph(summary, styles["summary"]),
+        Paragraph("HOW TO USE:", styles["howto"]),
+    ]
+    for s in steps:
+        elems.append(Paragraph(s, styles["step"], bulletText="\u25B8"))
+    elems.append(Spacer(1, 5 * mm))
+    return KeepTogether(elems)
+
+
 def build():
     doc = BaseDocTemplate(
         str(OUT),
@@ -248,7 +346,7 @@ def build():
         rightMargin=20 * mm,
         topMargin=32 * mm,
         bottomMargin=24 * mm,
-        title="Court Mastery — Feature List",
+        title="Court Mastery — User Guide",
         author="Court Mastery",
     )
     frame = Frame(
@@ -262,22 +360,21 @@ def build():
 
     story = []
 
-    # Cover block
-    story.append(Paragraph("FEATURE LIST · FEBRUARY 2026", styles["kicker"]))
-    story.append(Paragraph("Everything inside Court Mastery.", styles["h1"]))
+    story.append(Paragraph("USER GUIDE · FEBRUARY 2026", styles["kicker"]))
+    story.append(Paragraph("How to use Court Mastery.", styles["h1"]))
     story.append(
         Paragraph(
-            "A 10-week basketball training-program builder for coaches, players and parents "
-            "— from Aussie-Hoops-style mini-ballers (age 4+) all the way to NBL / WNBL-level expert prep. "
-            "Below is the complete, current feature list.",
+            "A step-by-step handbook to every feature inside Court Mastery — the 10-week "
+            "basketball training-program builder for coaches, players and parents. "
+            "Works from Aussie-Hoops-style mini-ballers (age 4+) all the way to NBL / WNBL "
+            "expert prep. Follow the steps in each section to get the most out of the app.",
             styles["subtitle"],
         )
     )
 
-    # Stat strip
     stats = [
-        ["10", "50+", "15", "6", "0"],
-        ["Weeks", "Drills", "Feature areas", "Skill tiers", "Ads"],
+        ["16", "50+", "500MB", "6", "0"],
+        ["Features", "Curated drills", "Max video size", "Skill tiers", "Ads"],
     ]
     stat_table = Table(stats, colWidths=[doc.width / 5] * 5, rowHeights=[16 * mm, 8 * mm])
     stat_table.setStyle(
@@ -286,55 +383,67 @@ def build():
                 ("BACKGROUND", (0, 0), (-1, 0), INK),
                 ("TEXTCOLOR", (0, 0), (-1, 0), GOLD),
                 ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-                ("FONTSIZE", (0, 0), (-1, 0), 26),
+                ("FONTSIZE", (0, 0), (-1, 0), 24),
                 ("ALIGN", (0, 0), (-1, -1), "CENTER"),
                 ("VALIGN", (0, 0), (-1, 0), "MIDDLE"),
-                ("BACKGROUND", (0, 1), (-1, 1), HexColor("#f2f2f2")),
+                ("BACKGROUND", (0, 1), (-1, 1), PANEL),
                 ("TEXTCOLOR", (0, 1), (-1, 1), MID),
                 ("FONTNAME", (0, 1), (-1, 1), "Helvetica-Bold"),
-                ("FONTSIZE", (0, 1), (-1, 1), 8),
+                ("FONTSIZE", (0, 1), (-1, 1), 7.5),
                 ("VALIGN", (0, 1), (-1, 1), "MIDDLE"),
                 ("LINEBEFORE", (1, 0), (-1, -1), 1, white),
             ]
         )
     )
     story.append(stat_table)
-    story.append(Spacer(1, 12 * mm))
+    story.append(Spacer(1, 10 * mm))
 
-    for section, bullets in FEATURES:
-        story.append(Paragraph(section.upper(), styles["h2"]))
-        for b in bullets:
-            story.append(Paragraph(b, styles["bullet"], bulletText="\u2022"))
-        story.append(Spacer(1, 4 * mm))
+    for title, summary, steps in FEATURES:
+        story.append(feature_block(title, summary, steps))
 
     story.append(PageBreak())
-    story.append(Paragraph("BEHIND THE SCENES", styles["h2"]))
+    story.append(Paragraph("QUICK REFERENCE", styles["h2"]))
     story.append(
         Paragraph(
-            "Court Mastery is built on FastAPI (Python) + MongoDB on the backend and React 19 + Tailwind + shadcn/ui on the frontend. "
-            "The full REST API covers Auth, Programs, Teams and the Drill Library. Sessions can be amended per team; "
-            "custom drills, reordering and removal are all first-class.",
+            "Common workflows in one glance.",
             styles["subtitle"],
         )
     )
 
-    story.append(Paragraph("API ENDPOINTS", styles["h2"]))
-    for line in [
-        "Auth: POST /api/auth/register · POST /api/auth/login · POST /api/auth/logout · GET /api/auth/me",
-        "Programs: POST /api/programs · GET /api/programs · GET /api/programs/:id · PATCH /api/programs/:id/sessions/:week · DELETE /api/programs/:id",
-        "Teams: POST /api/teams · GET /api/teams · GET /api/teams/:id · DELETE /api/teams/:id",
-        "Roster: POST /api/teams/:id/players · DELETE /api/teams/:id/players/:pid · PATCH /api/teams/:id/players/:pid/sessions/:week",
-        "Reference: GET /api/drills",
-    ]:
-        story.append(Paragraph(line, styles["bullet"], bulletText="\u25B8"))
+    quick = [
+        ("Run today's training", "Programs → open program → tap this week → tap ▶ Play on the Session Timer."),
+        ("Print a parent take-home", "Session View → Parent Handout → Print."),
+        ("Bring on an assistant coach", "Team board → Assistant Coach Invite → Copy the 6-digit code → give it to the assistant → they Register + tap Join Team."),
+        ("Update a player's stats", "Team board → tap the player row → edit fields in the Player Profile modal → Save Profile."),
+        ("Upload a hype-reel cover", "Program view → tap the cover square → pick a video up to 500MB → returns to Dashboard playing muted on loop."),
+        ("Install on phone", "Open in Safari (iOS) or Chrome (Android) → Add to Home Screen / Install App."),
+    ]
+    ref_rows = [[Paragraph(f"<b>{q[0]}</b>", styles["step"]), Paragraph(q[1], styles["step"])] for q in quick]
+    ref_table = Table(ref_rows, colWidths=[55 * mm, doc.width - 55 * mm])
+    ref_table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (0, -1), PANEL),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("BOX", (0, 0), (-1, -1), 0.4, MID),
+                ("INNERGRID", (0, 0), (-1, -1), 0.4, HexColor("#dddddd")),
+                ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+                ("TOPPADDING", (0, 0), (-1, -1), 6),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+            ]
+        )
+    )
+    story.append(ref_table)
 
     story.append(Spacer(1, 10 * mm))
     story.append(
         Paragraph(
-            "<b>Disclaimer</b> — Court Mastery is an independent training tool. It is not affiliated with, "
+            "<b>Support & Disclaimer</b> — Court Mastery is an independent training tool. It is not affiliated with, "
             "endorsed by or sponsored by Basketball Australia, the NBL, WNBL, NBL1, Aussie Hoops, the Australian Boomers, "
             "the Australian Opals or FIBA. All names and marks referenced belong to their respective owners and are used "
-            "here descriptively to help coaches contextualise the drills.",
+            "here descriptively to help coaches contextualise the drills. Video tutorials linked out to YouTube are hosted "
+            "by their original creators; Court Mastery claims no ownership over that content.",
             styles["footer"],
         )
     )

@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "@/lib/api";
-import { ArrowLeft, Plus, UserMinus, Check, Printer } from "lucide-react";
+import { ArrowLeft, Plus, UserMinus, Check, Printer, Copy, RefreshCw, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import MediaUpload, { MediaImage } from "@/components/MediaUpload";
+import PlayerBioCard from "@/components/PlayerBioCard";
 
 export default function TeamDetail() {
   const { id } = useParams();
   const [team, setTeam] = useState(null);
   const [newPlayerName, setNewPlayerName] = useState("");
   const [saving, setSaving] = useState(false);
+  const [bioPlayer, setBioPlayer] = useState(null);
+  const [showInvite, setShowInvite] = useState(false);
 
   const load = async () => {
     try {
@@ -33,6 +36,7 @@ export default function TeamDetail() {
     );
 
   const sessions = team.program?.sessions_summary || [];
+  const isOwner = team.role !== "assistant";
 
   const addPlayer = async (e) => {
     e.preventDefault();
@@ -43,8 +47,8 @@ export default function TeamDetail() {
       setNewPlayerName("");
       toast.success("Player added");
       load();
-    } catch {
-      toast.error("Failed to add player");
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "Failed to add player");
     } finally {
       setSaving(false);
     }
@@ -58,6 +62,39 @@ export default function TeamDetail() {
       load();
     } catch {
       toast.error("Failed to remove player");
+    }
+  };
+
+  const copyInvite = async () => {
+    if (!team.invite_code) return;
+    try {
+      await navigator.clipboard.writeText(team.invite_code);
+      toast.success("Invite code copied");
+    } catch {
+      toast.info(`Code: ${team.invite_code}`);
+    }
+  };
+
+  const rotateInvite = async () => {
+    if (!window.confirm("Generate a new invite code? The old code will stop working."))
+      return;
+    try {
+      const { data } = await api.post(`/teams/${id}/invite-code/rotate`);
+      setTeam((t) => ({ ...t, invite_code: data.invite_code }));
+      toast.success("New invite code generated");
+    } catch {
+      toast.error("Rotate failed");
+    }
+  };
+
+  const removeAssistant = async (assistantId) => {
+    if (!window.confirm("Revoke this assistant coach's access?")) return;
+    try {
+      await api.delete(`/teams/${id}/assistants/${assistantId}`);
+      toast.success("Assistant removed");
+      load();
+    } catch {
+      toast.error("Remove failed");
     }
   };
 
@@ -100,20 +137,32 @@ export default function TeamDetail() {
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6 mb-10">
         <div className="flex items-start gap-5">
           <div className="no-print">
-            <MediaUpload
-              kind="team-logo"
-              value={team.logo_media_id}
-              onChange={async (id) => {
-                try {
-                  await api.patch(`/teams/${team.id}/logo`, { logo_media_id: id });
-                  setTeam((t) => ({ ...t, logo_media_id: id }));
-                } catch {
-                  toast.error("Failed to save logo");
-                }
-              }}
-              accept="image/*"
-              size="lg"
-            />
+            {isOwner ? (
+              <MediaUpload
+                kind="team-logo"
+                value={team.logo_media_id}
+                onChange={async (id) => {
+                  try {
+                    await api.patch(`/teams/${team.id}/logo`, { logo_media_id: id });
+                    setTeam((t) => ({ ...t, logo_media_id: id }));
+                  } catch {
+                    toast.error("Failed to save logo");
+                  }
+                }}
+                accept="image/*"
+                size="lg"
+              />
+            ) : team.logo_media_id ? (
+              <MediaImage
+                mediaId={team.logo_media_id}
+                className="w-40 h-40 object-cover border border-white/10"
+                alt=""
+              />
+            ) : (
+              <div className="w-40 h-40 border border-white/10 flex items-center justify-center text-white/40 text-[10px] uppercase tracking-[0.25em]">
+                No logo
+              </div>
+            )}
           </div>
           <div>
             <div className="flex items-center gap-3 mb-3">
@@ -146,33 +195,127 @@ export default function TeamDetail() {
         </button>
       </div>
 
-      {/* Add player */}
-      <form
-        onSubmit={addPlayer}
-        className="card-tactical mb-8 flex flex-col sm:flex-row gap-3 items-stretch sm:items-end no-print"
-        data-testid="team-add-form"
-      >
-        <div className="flex-1">
-          <label className="text-xs uppercase tracking-[0.25em] text-white/60 mb-2 block">
-            Add Player
-          </label>
-          <input
-            data-testid="team-add-name-input"
-            value={newPlayerName}
-            onChange={(e) => setNewPlayerName(e.target.value)}
-            placeholder="Player name"
-            className="w-full bg-black/40 border border-white/10 focus:border-[#FFCD00] focus:outline-none px-4 py-3 rounded-sm text-white"
-          />
-        </div>
-        <button
-          type="submit"
-          data-testid="team-add-submit"
-          disabled={saving || !newPlayerName.trim()}
-          className="btn-primary disabled:opacity-50"
+      {/* Owner-only invite panel */}
+      {isOwner && (
+        <div
+          className="card-tactical mb-6 no-print"
+          data-testid="invite-panel"
         >
-          <Plus size={14} /> Add
-        </button>
-      </form>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <UserPlus size={14} className="text-[#FFCD00]" />
+                <div className="text-xs uppercase tracking-[0.25em] text-white/60 font-bold">
+                  Assistant Coach Invite
+                </div>
+              </div>
+              <div className="text-sm text-white/60">
+                Share this 6-digit code with an assistant. They register on
+                Court Mastery, tap <em>Join Team</em> and enter the code.
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                data-testid="invite-code-copy"
+                onClick={() => setShowInvite((s) => !s)}
+                onDoubleClick={copyInvite}
+                className="font-display text-3xl tracking-[0.35em] text-[#FFCD00] hover:text-white transition-colors border border-dashed border-white/15 px-4 py-2 rounded-sm"
+                title="Click to reveal / double-click to copy"
+              >
+                {showInvite ? team.invite_code : "••••••"}
+              </button>
+              <button
+                data-testid="invite-code-copy-btn"
+                onClick={copyInvite}
+                className="btn-ghost"
+                aria-label="Copy invite code"
+              >
+                <Copy size={14} /> Copy
+              </button>
+              <button
+                data-testid="invite-code-rotate-btn"
+                onClick={rotateInvite}
+                className="btn-ghost"
+                aria-label="Rotate invite code"
+              >
+                <RefreshCw size={14} /> Rotate
+              </button>
+            </div>
+          </div>
+          {team.assistants && team.assistants.length > 0 && (
+            <div className="mt-5 border-t border-white/10 pt-4">
+              <div className="text-[10px] uppercase tracking-[0.25em] text-white/50 font-bold mb-2">
+                Current Assistant Coaches ({team.assistants.length})
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {team.assistants.map((a) => (
+                  <div
+                    key={a.id}
+                    data-testid={`assistant-chip-${a.id}`}
+                    className="flex items-center gap-2 bg-black/40 border border-white/10 rounded-sm px-3 py-1.5 text-sm"
+                  >
+                    <span className="text-white/80">{a.name || a.email}</span>
+                    <button
+                      data-testid={`assistant-remove-${a.id}`}
+                      onClick={() => removeAssistant(a.id)}
+                      className="text-white/40 hover:text-red-400"
+                      aria-label="Remove assistant"
+                    >
+                      <UserMinus size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Read-only banner for assistants */}
+      {!isOwner && (
+        <div
+          className="card-tactical mb-6 no-print border-l-4 border-[#FFCD00]"
+          data-testid="assistant-banner"
+        >
+          <div className="text-xs uppercase tracking-[0.25em] text-[#FFCD00] font-bold mb-1">
+            Assistant Coach Access
+          </div>
+          <div className="text-sm text-white/70">
+            You can mark attendance and update player photos. Only the head
+            coach can add/remove players or edit season stats.
+          </div>
+        </div>
+      )}
+
+      {/* Add player (owner only) */}
+      {isOwner && (
+        <form
+          onSubmit={addPlayer}
+          className="card-tactical mb-8 flex flex-col sm:flex-row gap-3 items-stretch sm:items-end no-print"
+          data-testid="team-add-form"
+        >
+          <div className="flex-1">
+            <label className="text-xs uppercase tracking-[0.25em] text-white/60 mb-2 block">
+              Add Player
+            </label>
+            <input
+              data-testid="team-add-name-input"
+              value={newPlayerName}
+              onChange={(e) => setNewPlayerName(e.target.value)}
+              placeholder="Player name"
+              className="w-full bg-black/40 border border-white/10 focus:border-[#FFCD00] focus:outline-none px-4 py-3 rounded-sm text-white"
+            />
+          </div>
+          <button
+            type="submit"
+            data-testid="team-add-submit"
+            disabled={saving || !newPlayerName.trim()}
+            className="btn-primary disabled:opacity-50"
+          >
+            <Plus size={14} /> Add
+          </button>
+        </form>
+      )}
 
       {/* Grid */}
       {team.roster.length === 0 ? (
@@ -215,40 +358,35 @@ export default function TeamDetail() {
                     className="border-b border-white/5 hover:bg-white/[0.02]"
                   >
                     <td className="p-3 font-display uppercase tracking-wide sticky left-0 bg-[#141414] z-10">
-                      <div className="flex items-center gap-3">
-                        <div className="no-print">
-                          <MediaUpload
-                            kind="player-photo"
-                            value={p.photo_media_id}
-                            onChange={async (id) => {
-                              try {
-                                await api.patch(
-                                  `/teams/${team.id}/players/${p.player_id}/photo`,
-                                  { photo_media_id: id }
-                                );
-                                setTeam((t) => ({
-                                  ...t,
-                                  roster: t.roster.map((r) =>
-                                    r.player_id === p.player_id
-                                      ? { ...r, photo_media_id: id }
-                                      : r
-                                  ),
-                                }));
-                              } catch {
-                                toast.error("Failed to save photo");
-                              }
-                            }}
-                            accept="image/*"
-                            size="sm"
-                          />
-                        </div>
+                      <button
+                        type="button"
+                        data-testid={`roster-open-bio-${p.player_id}`}
+                        onClick={() => setBioPlayer(p)}
+                        className="flex items-center gap-3 group text-left"
+                      >
                         <MediaImage
                           mediaId={p.photo_media_id}
-                          className="hidden print:block w-10 h-10 object-cover"
+                          className="w-10 h-10 object-cover border border-white/10 group-hover:border-[#FFCD00] transition-colors"
                           alt=""
                         />
-                        <span>{p.player_name}</span>
-                      </div>
+                        {!p.photo_media_id && (
+                          <div className="w-10 h-10 border border-white/10 flex items-center justify-center text-[10px] text-white/40 uppercase group-hover:border-[#FFCD00] group-hover:text-[#FFCD00] transition-colors">
+                            {(p.number && `#${p.number}`) || p.player_name?.[0] || "?"}
+                          </div>
+                        )}
+                        <div>
+                          <div className="group-hover:text-[#FFCD00] transition-colors">
+                            {p.player_name}
+                          </div>
+                          {(p.number || p.position) && (
+                            <div className="text-[10px] tracking-[0.2em] text-white/40 normal-case">
+                              {p.number && `#${p.number}`}
+                              {p.number && p.position && " · "}
+                              {p.position}
+                            </div>
+                          )}
+                        </div>
+                      </button>
                     </td>
                     {sessions.map((s) => {
                       const cell = (p.sessions || {})[String(s.week)] || {};
@@ -274,14 +412,16 @@ export default function TeamDetail() {
                       {done}/{sessions.length}
                     </td>
                     <td className="p-3 text-right no-print">
-                      <button
-                        data-testid={`roster-remove-${p.player_id}`}
-                        onClick={() => removePlayer(p.player_id)}
-                        className="text-white/30 hover:text-red-400 transition-colors"
-                        aria-label="Remove player"
-                      >
-                        <UserMinus size={16} />
-                      </button>
+                      {isOwner && (
+                        <button
+                          data-testid={`roster-remove-${p.player_id}`}
+                          onClick={() => removePlayer(p.player_id)}
+                          className="text-white/30 hover:text-red-400 transition-colors"
+                          aria-label="Remove player"
+                        >
+                          <UserMinus size={16} />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );
@@ -289,6 +429,16 @@ export default function TeamDetail() {
             </tbody>
           </table>
         </div>
+      )}
+      {bioPlayer && (
+        <PlayerBioCard
+          teamId={team.id}
+          player={bioPlayer}
+          isOwner={isOwner}
+          sessions={sessions}
+          onClose={() => setBioPlayer(null)}
+          onSaved={load}
+        />
       )}
     </div>
   );

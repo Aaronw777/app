@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api, API } from "@/lib/api";
 import { Upload, X, Image as ImageIcon, Video as VideoIcon } from "lucide-react";
 import { toast } from "sonner";
@@ -24,6 +24,9 @@ export default function MediaUpload({
 }) {
   const inputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
+  // Track content_type from the most recent upload so we can preview mp4 vs jpg
+  // correctly. When `value` changes externally we assume the caller knows.
+  const [lastKind, setLastKind] = useState(null);
 
   const dim =
     size === "sm"
@@ -42,6 +45,7 @@ export default function MediaUpload({
       const { data } = await api.post("/media/upload", fd, {
         headers: { "Content-Type": "multipart/form-data" },
       });
+      setLastKind(data.content_type?.startsWith("video/") ? "video" : "image");
       onChange(data.id);
       toast.success("Uploaded");
     } catch (e) {
@@ -51,12 +55,22 @@ export default function MediaUpload({
     }
   };
 
+  // When `value` changes (external), reset lastKind so we fall back to accept.
+  useEffect(() => {
+    if (!value) setLastKind(null);
+  }, [value]);
+
   const clear = (e) => {
     e.stopPropagation();
+    setLastKind(null);
     onChange(null);
   };
 
-  const isVideo = accept.includes("video");
+  // Decide preview type: latest upload wins, else default per accept.
+  const isVideo = lastKind
+    ? lastKind === "video"
+    : accept.includes("video") && !accept.includes("image");
+  const canBeEither = accept.includes("video") && accept.includes("image");
   const token =
     typeof window !== "undefined" ? localStorage.getItem("cm_token") : null;
   const src = value ? `${API}/media/${value}${token ? `?auth=${token}` : ""}` : null;
@@ -76,13 +90,22 @@ export default function MediaUpload({
             src={src}
             alt=""
             className="w-full h-full object-cover"
-            onError={(e) => {
-              e.currentTarget.style.display = "none";
+            onError={() => {
+              // Might be a video — try that renderer instead.
+              if (canBeEither) setLastKind("video");
             }}
           />
         )}
         {value && isVideo && (
-          <video src={src} className="w-full h-full object-cover" muted />
+          <video
+            src={src}
+            className="w-full h-full object-cover"
+            muted
+            playsInline
+            autoPlay
+            loop
+            preload="metadata"
+          />
         )}
         {!value && !uploading && (
           <div className="flex flex-col items-center gap-1 text-[10px] uppercase tracking-[0.2em] font-bold">

@@ -54,12 +54,12 @@ export default function ProgramView() {
                   await api.patch(`/programs/${program.id}/cover`, {
                     cover_media_id: id,
                   });
-                  setProgram((p) => ({ ...p, cover_media_id: id }));
+                  setProgram((p) => ({ ...p, cover_media_id: id, cover_is_video: null }));
                 } catch {
                   toast.error("Failed to save cover");
                 }
               }}
-              accept="image/*"
+              accept="image/*,video/*"
               size="lg"
             />
           </div>
