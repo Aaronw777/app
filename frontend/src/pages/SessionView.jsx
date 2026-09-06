@@ -289,7 +289,7 @@ export default function SessionView() {
                   {d.coach_notes}
                 </div>
                 <div className="mt-4">
-                  <KeyPoints category={d.category} />
+                  <KeyPoints drill={d} />
                 </div>
                 {(() => {
                   const searchQuery = encodeURIComponent(`${d.name} basketball drill tutorial`);
