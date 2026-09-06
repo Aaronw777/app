@@ -111,7 +111,7 @@ export default function ParentHandout() {
                     {d.coach_notes}
                   </div>
                   <div className="mt-3">
-                    <TechniqueIllustration category={d.category} />
+                    <TechniqueIllustration category={d.category} light />
                   </div>
                   {(() => {
                     const q = encodeURIComponent(`${d.name} basketball drill tutorial`);

@@ -340,30 +340,35 @@ const CUE = {
   "Basketball IQ": "Read the defender, not the play call",
 };
 
-export default function TechniqueIllustration({ category }) {
+export default function TechniqueIllustration({ category, light = false }) {
   const Overlay = OVERLAYS[category];
   if (!Overlay) return null;
   const cue = CUE[category] || "";
+  const wrapCls = light
+    ? "mt-4 border border-black bg-white rounded-sm p-3"
+    : "mt-4 border border-white/10 bg-black/30 rounded-sm p-3 print:bg-white print:border-black";
+  const kickerCls = light
+    ? "text-[10px] uppercase tracking-[0.25em] text-black font-bold mb-2 flex items-center gap-2"
+    : "text-[10px] uppercase tracking-[0.25em] text-[#FFCD00] font-bold mb-2 flex items-center gap-2 print:text-black";
+  const svgCls = light
+    ? "w-full h-auto text-black"
+    : "w-full h-auto text-white/85 print:text-black";
+  const cueCls = light
+    ? "mt-2 text-xs text-black italic"
+    : "mt-2 text-xs text-white/70 italic print:text-black";
   return (
-    <div
-      className="mt-4 border border-white/10 bg-black/30 rounded-sm p-3 print:bg-white print:border-black"
-      data-testid="technique-illustration"
-    >
-      <div className="text-[10px] uppercase tracking-[0.25em] text-[#FFCD00] font-bold mb-2 flex items-center gap-2 print:text-black">
+    <div className={wrapCls} data-testid="technique-illustration">
+      <div className={kickerCls}>
         <span>Quick Visual Cue · {category}</span>
       </div>
       <svg
         viewBox={`0 0 ${W} ${H}`}
-        className="w-full h-auto text-white/85 print:text-black"
+        className={svgCls}
         aria-label={`Technique illustration for ${category}`}
       >
         <Overlay />
       </svg>
-      {cue && (
-        <div className="mt-2 text-xs text-white/70 italic print:text-black">
-          {cue}
-        </div>
-      )}
+      {cue && <div className={cueCls}>{cue}</div>}
     </div>
   );
 }
