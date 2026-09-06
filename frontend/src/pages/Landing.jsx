@@ -30,8 +30,8 @@ export default function Landing() {
             </h1>
             <p className="text-lg md:text-xl text-white/70 max-w-2xl mt-8 leading-relaxed">
               A weekly 1-hour training blueprint that takes any player from{" "}
-              <span className="text-[#FFCD00] font-semibold">the first day with a ball</span>, to{" "}
-              <span className="text-[#FFCD00] font-semibold">Aussie Hoops style mini-ballers</span> through to the{" "}
+              <span className="text-[#FFCD00] font-semibold">the first day with a ball</span>{" "}
+              through to the{" "}
               <span className="text-[#FFCD00] font-semibold">advanced baller wanting to refine their game</span> — built around
               FIBA-style rules and inspired by the Australian junior-to-senior basketball pathway.
             </p>
