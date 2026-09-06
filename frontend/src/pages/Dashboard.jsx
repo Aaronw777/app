@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { api } from "@/lib/api";
+import { api, API } from "@/lib/api";
 import { Plus, Trash2, ChevronRight, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
@@ -101,8 +101,22 @@ export default function Dashboard() {
                 key={p.id}
                 to={`/programs/${p.id}`}
                 data-testid={`program-card-${p.id}`}
-                className="card-tactical block group relative"
+                className="card-tactical block group relative overflow-hidden"
               >
+                {p.cover_media_id && (() => {
+                  const token = typeof window !== "undefined" ? localStorage.getItem("cm_token") : null;
+                  const src = `${API}/media/${p.cover_media_id}${token ? `?auth=${token}` : ""}`;
+                  return (
+                    <div className="-mx-6 -mt-6 mb-4 h-28 overflow-hidden">
+                      <img
+                        src={src}
+                        alt=""
+                        className="w-full h-full object-cover opacity-70 group-hover:opacity-90 transition-opacity"
+                        onError={(e) => (e.currentTarget.style.display = "none")}
+                      />
+                    </div>
+                  );
+                })()}
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <div className="font-display text-2xl uppercase tracking-wide leading-tight">

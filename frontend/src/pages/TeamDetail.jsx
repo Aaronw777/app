@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { api } from "@/lib/api";
 import { ArrowLeft, Plus, UserMinus, Check, Printer } from "lucide-react";
 import { toast } from "sonner";
+import MediaUpload, { MediaImage } from "@/components/MediaUpload";
 
 export default function TeamDetail() {
   const { id } = useParams();
@@ -96,27 +97,45 @@ export default function TeamDetail() {
         <ArrowLeft size={14} /> All Teams
       </Link>
 
-      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10">
-        <div>
-          <div className="flex items-center gap-3 mb-3">
-            <span className="tag tag-gold">Team Roster</span>
-            {team.program?.skill_level && (
-              <span className="tag">{team.program.skill_level}</span>
-            )}
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6 mb-10">
+        <div className="flex items-start gap-5">
+          <div className="no-print">
+            <MediaUpload
+              kind="team-logo"
+              value={team.logo_media_id}
+              onChange={async (id) => {
+                try {
+                  await api.patch(`/teams/${team.id}/logo`, { logo_media_id: id });
+                  setTeam((t) => ({ ...t, logo_media_id: id }));
+                } catch {
+                  toast.error("Failed to save logo");
+                }
+              }}
+              accept="image/*"
+              size="lg"
+            />
           </div>
-          <h1 className="font-display text-4xl md:text-6xl uppercase tracking-tight leading-none">
-            {team.name}
-          </h1>
-          <p className="text-white/60 mt-3">
-            Program:{" "}
-            <Link
-              to={`/programs/${team.program_id}`}
-              className="text-[#FFCD00] hover:underline"
-            >
-              {team.program?.player_name || "Deleted program"}
-            </Link>{" "}
-            · {sessions.length} weeks
-          </p>
+          <div>
+            <div className="flex items-center gap-3 mb-3">
+              <span className="tag tag-gold">Team Roster</span>
+              {team.program?.skill_level && (
+                <span className="tag">{team.program.skill_level}</span>
+              )}
+            </div>
+            <h1 className="font-display text-4xl md:text-6xl uppercase tracking-tight leading-none">
+              {team.name}
+            </h1>
+            <p className="text-white/60 mt-3">
+              Program:{" "}
+              <Link
+                to={`/programs/${team.program_id}`}
+                className="text-[#FFCD00] hover:underline"
+              >
+                {team.program?.player_name || "Deleted program"}
+              </Link>{" "}
+              · {sessions.length} weeks
+            </p>
+          </div>
         </div>
         <button
           data-testid="team-print-btn"
@@ -196,7 +215,40 @@ export default function TeamDetail() {
                     className="border-b border-white/5 hover:bg-white/[0.02]"
                   >
                     <td className="p-3 font-display uppercase tracking-wide sticky left-0 bg-[#141414] z-10">
-                      {p.player_name}
+                      <div className="flex items-center gap-3">
+                        <div className="no-print">
+                          <MediaUpload
+                            kind="player-photo"
+                            value={p.photo_media_id}
+                            onChange={async (id) => {
+                              try {
+                                await api.patch(
+                                  `/teams/${team.id}/players/${p.player_id}/photo`,
+                                  { photo_media_id: id }
+                                );
+                                setTeam((t) => ({
+                                  ...t,
+                                  roster: t.roster.map((r) =>
+                                    r.player_id === p.player_id
+                                      ? { ...r, photo_media_id: id }
+                                      : r
+                                  ),
+                                }));
+                              } catch {
+                                toast.error("Failed to save photo");
+                              }
+                            }}
+                            accept="image/*"
+                            size="sm"
+                          />
+                        </div>
+                        <MediaImage
+                          mediaId={p.photo_media_id}
+                          className="hidden print:block w-10 h-10 object-cover"
+                          alt=""
+                        />
+                        <span>{p.player_name}</span>
+                      </div>
                     </td>
                     {sessions.map((s) => {
                       const cell = (p.sessions || {})[String(s.week)] || {};

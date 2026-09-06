@@ -3,6 +3,7 @@ import { Link, useParams, useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
 import { ChevronRight, Check, Printer, ArrowLeft, Users, FileText } from "lucide-react";
 import { toast } from "sonner";
+import MediaUpload, { MediaImage } from "@/components/MediaUpload";
 
 export default function ProgramView() {
   const { id } = useParams();
@@ -42,21 +43,41 @@ export default function ProgramView() {
         <ArrowLeft size={14} /> All Programs
       </Link>
 
-      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12">
-        <div>
-          <div className="flex items-center gap-3 mb-3">
-            <span className="tag tag-gold">10-Week Program</span>
-            <span className="tag">{program.gender === "womens" ? "Womens" : "Mens"}</span>
-            <span className="tag">Age {program.starting_age}+</span>
-            <span className="tag tag-orange">{program.skill_level}</span>
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6 mb-12">
+        <div className="flex items-start gap-5">
+          <div className="no-print">
+            <MediaUpload
+              kind="program-cover"
+              value={program.cover_media_id}
+              onChange={async (id) => {
+                try {
+                  await api.patch(`/programs/${program.id}/cover`, {
+                    cover_media_id: id,
+                  });
+                  setProgram((p) => ({ ...p, cover_media_id: id }));
+                } catch {
+                  toast.error("Failed to save cover");
+                }
+              }}
+              accept="image/*"
+              size="lg"
+            />
           </div>
-          <h1 className="font-display text-4xl md:text-6xl uppercase tracking-tight leading-none">
-            {program.player_name}
-          </h1>
-          <p className="text-white/60 mt-3">
-            FIBA-style rules · Inspired by the Australian{" "}
-            {program.gender === "womens" ? "women's" : "men's"} basketball pathway
-          </p>
+          <div>
+            <div className="flex items-center gap-3 mb-3 flex-wrap">
+              <span className="tag tag-gold">10-Week Program</span>
+              <span className="tag">{program.gender === "womens" ? "Womens" : "Mens"}</span>
+              <span className="tag">Age {program.starting_age}+</span>
+              <span className="tag tag-orange">{program.skill_level}</span>
+            </div>
+            <h1 className="font-display text-4xl md:text-6xl uppercase tracking-tight leading-none">
+              {program.player_name}
+            </h1>
+            <p className="text-white/60 mt-3">
+              FIBA-style rules · Inspired by the Australian{" "}
+              {program.gender === "womens" ? "women's" : "men's"} basketball pathway
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-3 md:gap-6 flex-wrap">
           <div>

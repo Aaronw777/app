@@ -13,12 +13,13 @@ from typing import List, Optional, Literal
 
 import bcrypt
 import jwt
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, Request, Response
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, Request, Response, UploadFile, File, Form, Query, Header
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
 from drills_data import build_program, DRILLS
+import storage as storage_mod
 
 # --- config ---
 MONGO_URL = os.environ["MONGO_URL"]
@@ -125,6 +126,7 @@ class SessionUpdate(BaseModel):
     notes: Optional[str] = None
     drills: Optional[List[dict]] = None
     theme: Optional[str] = None
+    photos: Optional[List[str]] = None
 
 
 class TeamCreate(BaseModel):
@@ -258,6 +260,9 @@ async def update_session(
                 s["notes"] = payload.notes
             if payload.theme is not None:
                 s["theme"] = payload.theme.strip()[:120] or s["theme"]
+            if payload.photos is not None:
+                # Keep it a simple list of media_id strings; cap at 12
+                s["photos"] = [str(p) for p in payload.photos if p][:12]
             if payload.drills is not None:
                 # Sanitise: keep only fields we recognise; ensure duration is int
                 cleaned = []
@@ -278,6 +283,7 @@ async def update_session(
                         "video": str(d.get("video", ""))[:200],
                         "coach_notes": str(d.get("coach_notes", ""))[:600],
                         "custom": bool(d.get("custom", False)) or str(d.get("id", "")).startswith("custom-"),
+                        "media_id": str(d.get("media_id") or "") or None,
                     })
                 s["drills"] = cleaned
                 s["total_minutes"] = sum(d["duration"] for d in cleaned)
@@ -429,6 +435,162 @@ async def update_roster_session(
     return {"ok": True}
 
 
+# ============ Media / File Storage ============
+_ALLOWED_KINDS = {"team-logo", "player-photo", "drill-media", "session-photo", "program-cover", "misc"}
+
+
+@api_router.post("/media/upload")
+async def upload_media(
+    file: UploadFile = File(...),
+    kind: str = Form("misc"),
+    user: dict = Depends(get_current_user),
+):
+    if kind not in _ALLOWED_KINDS:
+        raise HTTPException(status_code=400, detail=f"Invalid kind. Allowed: {sorted(_ALLOWED_KINDS)}")
+
+    content_type = (file.content_type or "application/octet-stream").lower()
+    ext = ""
+    if file.filename and "." in file.filename:
+        ext = file.filename.rsplit(".", 1)[-1].lower()
+
+    data = await file.read()
+    try:
+        result = storage_mod.upload_bytes(user["id"], kind, data, content_type, ext)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.exception("Storage upload failed")
+        raise HTTPException(status_code=502, detail=f"Storage upload failed: {e}")
+
+    media_id = str(uuid.uuid4())
+    doc = {
+        "id": media_id,
+        "user_id": user["id"],
+        "kind": kind,
+        "storage_path": result["path"],
+        "original_filename": file.filename,
+        "content_type": result["content_type"],
+        "size": result["size"],
+        "is_deleted": False,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.media.insert_one(doc)
+    doc.pop("_id", None)
+    doc["url"] = f"/api/media/{media_id}"
+    return doc
+
+
+@api_router.get("/media/{media_id}")
+async def download_media(
+    media_id: str,
+    request: Request,
+    auth: Optional[str] = Query(None),
+):
+    # Support auth via cookie, Authorization header, or ?auth=<token> (for <img src>).
+    token = request.cookies.get("access_token")
+    if not token:
+        header = request.headers.get("Authorization", "")
+        if header.startswith("Bearer "):
+            token = header[7:]
+    if not token and auth:
+        token = auth
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    record = await db.media.find_one({"id": media_id, "is_deleted": False}, {"_id": 0})
+    if not record:
+        raise HTTPException(status_code=404, detail="Media not found")
+    # Owner-only access
+    if record["user_id"] != payload.get("sub"):
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+    try:
+        data, ct = storage_mod.download(record["storage_path"])
+    except Exception as e:
+        logger.exception("Storage download failed")
+        raise HTTPException(status_code=502, detail=f"Storage download failed: {e}")
+    return Response(
+        content=data,
+        media_type=record.get("content_type") or ct,
+        headers={"Cache-Control": "private, max-age=3600"},
+    )
+
+
+@api_router.delete("/media/{media_id}")
+async def delete_media(media_id: str, user: dict = Depends(get_current_user)):
+    result = await db.media.update_one(
+        {"id": media_id, "user_id": user["id"], "is_deleted": False},
+        {"$set": {"is_deleted": True}},
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Media not found")
+    return {"ok": True}
+
+
+# ============ Attach media references to Teams / Programs ============
+class TeamLogoUpdate(BaseModel):
+    logo_media_id: Optional[str] = None
+
+
+class PlayerPhotoUpdate(BaseModel):
+    photo_media_id: Optional[str] = None
+
+
+class ProgramCoverUpdate(BaseModel):
+    cover_media_id: Optional[str] = None
+
+
+@api_router.patch("/teams/{team_id}/logo")
+async def set_team_logo(team_id: str, payload: TeamLogoUpdate, user: dict = Depends(get_current_user)):
+    result = await db.teams.update_one(
+        {"id": team_id, "user_id": user["id"]},
+        {"$set": {"logo_media_id": payload.logo_media_id}},
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Team not found")
+    return {"ok": True}
+
+
+@api_router.patch("/teams/{team_id}/players/{player_id}/photo")
+async def set_player_photo(
+    team_id: str,
+    player_id: str,
+    payload: PlayerPhotoUpdate,
+    user: dict = Depends(get_current_user),
+):
+    team = await db.teams.find_one({"id": team_id, "user_id": user["id"]})
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+    updated = False
+    for p in team.get("roster", []):
+        if p["player_id"] == player_id:
+            p["photo_media_id"] = payload.photo_media_id
+            updated = True
+            break
+    if not updated:
+        raise HTTPException(status_code=404, detail="Player not found")
+    await db.teams.update_one(
+        {"id": team_id, "user_id": user["id"]},
+        {"$set": {"roster": team["roster"]}},
+    )
+    return {"ok": True}
+
+
+@api_router.patch("/programs/{program_id}/cover")
+async def set_program_cover(program_id: str, payload: ProgramCoverUpdate, user: dict = Depends(get_current_user)):
+    result = await db.programs.update_one(
+        {"id": program_id, "user_id": user["id"]},
+        {"$set": {"cover_media_id": payload.cover_media_id}},
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Program not found")
+    return {"ok": True}
+
+
 # ============ Health ============
 @api_router.get("/")
 async def root():
@@ -441,6 +603,14 @@ async def startup():
     await db.users.create_index("email", unique=True)
     await db.programs.create_index("user_id")
     await db.teams.create_index("user_id")
+    await db.media.create_index("user_id")
+
+    # Warm up storage session (non-fatal on failure)
+    try:
+        storage_mod.init_storage()
+        logger.info("Emergent object storage initialised")
+    except Exception as e:
+        logger.warning(f"Storage init failed (uploads will retry on-demand): {e}")
 
     # Seed admin
     admin_email = os.environ.get("ADMIN_EMAIL", "").lower().strip()

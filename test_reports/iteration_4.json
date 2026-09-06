@@ -1,0 +1,32 @@
+{
+  "summary": "Iteration 4 (Emergent Object Storage / Media Upload) fully verified. Backend pytest /app/backend/tests/test_media.py: 11/11 passed in 4.9s. Coverage: POST /api/media/upload (401 no-auth, 400 invalid kind, 400 non-image content-type, 200 happy path returns {id,kind,url,size,content_type,storage_path}); GET /api/media/:id via Bearer header AND ?auth= query param returning the actual PNG bytes (magic \\x89PNG verified); 401 without auth; 403 cross-user; 404 unknown id; DELETE soft-delete then GET returns 404. Attachments: PATCH /api/programs/:id/cover round-trips cover_media_id via GET, PATCH /api/teams/:id/logo returns logo_media_id, PATCH /api/teams/:id/players/:pid/photo stores photo_media_id on roster entry, PATCH /api/programs/:id/sessions/:week accepts photos[] (capped/stored) and drills[].media_id (round-trips through sanitiser). Storage init log 'Emergent object storage initialised' present in /var/log/supervisor/backend.err.log. Frontend Playwright: logged in as test1@test.com, program-cover MediaUpload renders on /programs/:id, JPG/PNG upload succeeds (toast 'Uploaded'), <img> renders inside button with ?auth=<token> src. Refreshing Dashboard shows cover thumbnail on the program card (direct <img> in Dashboard.jsx, not MediaImage helper — expected). Team detail shows team-logo MediaUpload (upload OK, img rendered) plus one player-photo upload square per player row. Session view (/programs/:id/week/1) exposes media-upload-session-photo control. Amend Session → Add Custom drill form exposes media-upload-drill-media control.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Team detail header", "issues": ["Team logo empty state uses same border/background as filled state; harder to spot on smaller screens — minor UX."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_media.py",
+    "/app/test_reports/pytest/media_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "MediaUpload passes JWT in URL query (?auth=<token>) — required for <img src> auth, acknowledged tradeoff. Tokens will appear in server access logs and browser history. Consider issuing a short-lived scoped media token instead of the full access JWT.",
+    "storage.py:_get returns raw bytes into memory then re-emits via FastAPI Response — for 200MB videos this doubles memory. Consider StreamingResponse with iter_content chunks from the upstream requests call.",
+    "server.py:483 download_media duplicates cookie/Bearer/query token extraction instead of calling get_current_user — acceptable but drifts from single source. Could be refactored into a helper.",
+    "MediaUpload component's remove (×) button has opacity-0 by default and only becomes visible on hover/focus; on touch devices there's no hover — users may not discover the remove control. Consider always-visible × on mobile.",
+    "SessionView drill-media replaces YouTube search only for custom drills that have media_id set — for very large videos there is no width/height constraint on <video>, could cause layout jumps. Consider aspect-video wrapper.",
+    "Dashboard.jsx builds img src inline with API+token instead of reusing MediaImage helper (DRY)."
+  ],
+  "updated_files": ["/app/backend/tests/test_media.py"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "coach@basketballaus.com / CoachAdmin2026! (admin, no seeded programs); test1@test.com / testpass1 (has 3 programs and 2 teams — used for UI tests)",
+  "seed_data_creation": "Backend: creates TEST_media_a_* and TEST_media_b_* users, TEST_Cover / TEST_ForTeam / TEST_Session programs, TEST_Team + TEST_Player1 team/roster entries — not cleaned up. Frontend: uploaded a small test PNG as program cover on the first program of test1@test.com, on the first team logo of test1@test.com, and on week-1 session photos.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Media stack is stable. All new endpoints (/api/media/upload, /api/media/:id, /api/media/:id DELETE, PATCH /api/teams/:id/logo, PATCH /api/teams/:id/players/:pid/photo, PATCH /api/programs/:id/cover, extended PATCH /api/programs/:id/sessions/:week with photos & drill.media_id) covered by pytest. To re-run: `pytest /app/backend/tests/ -o addopts=''`. Frontend test IDs to reuse: media-upload-{kind}, media-input-{kind}, media-remove-{kind}, media-image.",
+  "rca of the issue": "N/A — no failing tests."
+}

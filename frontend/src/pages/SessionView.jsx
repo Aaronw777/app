@@ -7,6 +7,8 @@ import CourtDiagram from "@/components/CourtDiagram";
 import DrillPicker from "@/components/DrillPicker";
 import CustomDrillForm from "@/components/CustomDrillForm";
 import KeyPoints from "@/components/KeyPoints";
+import MediaUpload, { MediaImage } from "@/components/MediaUpload";
+import { API } from "@/lib/api";
 import { toast } from "sonner";
 
 export default function SessionView() {
@@ -310,7 +312,34 @@ export default function SessionView() {
                 })()}
               </div>
               <div className="aspect-video bg-black/60 border border-white/10 rounded-sm overflow-hidden relative group">
-                {(() => {
+                {d.media_id ? (
+                  (() => {
+                    const token =
+                      typeof window !== "undefined"
+                        ? localStorage.getItem("cm_token")
+                        : null;
+                    const url = `${API}/media/${d.media_id}${
+                      token ? `?auth=${token}` : ""
+                    }`;
+                    // Naive video vs image inference: presence of ".mp4"/etc isn't stored,
+                    // so we render both — video preview if it plays, else fallback to img.
+                    return (
+                      <video
+                        src={url}
+                        className="w-full h-full object-cover"
+                        controls
+                        preload="metadata"
+                        onError={(e) => {
+                          const img = document.createElement("img");
+                          img.src = url;
+                          img.className = "w-full h-full object-cover";
+                          e.currentTarget.replaceWith(img);
+                        }}
+                      />
+                    );
+                  })()
+                ) : (
+                  (() => {
                   const searchQuery = encodeURIComponent(`${d.name} basketball drill tutorial`);
                   const watchUrl = `https://www.youtube.com/results?search_query=${searchQuery}`;
                   return (
@@ -334,7 +363,8 @@ export default function SessionView() {
                       </div>
                     </a>
                   );
-                })()}
+                })()
+                )}
               </div>
               <div className="md:col-span-3 mt-2">
               </div>
@@ -389,6 +419,59 @@ export default function SessionView() {
           rows={5}
           className="w-full bg-black/40 border border-white/10 focus:border-[#FFCD00] focus:outline-none px-4 py-3 rounded-sm text-white text-sm resize-y"
         />
+        <div className="mt-4">
+          <div className="text-[10px] uppercase tracking-[0.25em] text-white/60 mb-2 font-bold">
+            Session Photos
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            {(session.photos || []).map((mid) => (
+              <div key={mid} className="relative">
+                <MediaImage
+                  mediaId={mid}
+                  className="w-20 h-20 object-cover rounded-sm border border-white/10"
+                />
+                <button
+                  data-testid={`session-photo-remove-${mid}`}
+                  onClick={async () => {
+                    const next = (session.photos || []).filter((x) => x !== mid);
+                    try {
+                      const { data } = await api.patch(
+                        `/programs/${id}/sessions/${weekNum}`,
+                        { photos: next }
+                      );
+                      setProgram(data);
+                    } catch {
+                      toast.error("Failed to remove");
+                    }
+                  }}
+                  className="absolute -top-2 -right-2 w-5 h-5 bg-black text-white border border-white/30 rounded-full flex items-center justify-center hover:bg-red-500"
+                  aria-label="Remove photo"
+                >
+                  <span className="text-xs">×</span>
+                </button>
+              </div>
+            ))}
+            <MediaUpload
+              kind="session-photo"
+              value={null}
+              onChange={async (mid) => {
+                if (!mid) return;
+                const next = [...(session.photos || []), mid];
+                try {
+                  const { data } = await api.patch(
+                    `/programs/${id}/sessions/${weekNum}`,
+                    { photos: next }
+                  );
+                  setProgram(data);
+                } catch {
+                  toast.error("Failed to save photo");
+                }
+              }}
+              accept="image/*"
+              size="md"
+            />
+          </div>
+        </div>
         <div className="mt-4 flex justify-end">
           <button
             data-testid="session-save-notes-btn"

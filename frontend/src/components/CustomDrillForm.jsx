@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { X, Save } from "lucide-react";
+import MediaUpload from "@/components/MediaUpload";
 
 const CATEGORIES = [
   "Warm-Up",
@@ -22,6 +23,7 @@ export default function CustomDrillForm({ open, onClose, onSave }) {
     level: 2,
     description: "",
     coach_notes: "",
+    media_id: null,
   });
 
   if (!open) return null;
@@ -41,6 +43,7 @@ export default function CustomDrillForm({ open, onClose, onSave }) {
       level: 2,
       description: "",
       coach_notes: "",
+      media_id: null,
     });
     onClose();
   };
@@ -146,6 +149,16 @@ export default function CustomDrillForm({ open, onClose, onSave }) {
               rows={2}
               placeholder="Key cues, why this drill, what to watch for..."
               className="input resize-y"
+            />
+          </Field>
+          <Field label="Drill Photo or Video (optional)">
+            <MediaUpload
+              kind="drill-media"
+              value={form.media_id}
+              onChange={(id) => setForm({ ...form, media_id: id })}
+              accept="image/*,video/*"
+              size="lg"
+              label="Your own demo clip or diagram"
             />
           </Field>
         </div>
