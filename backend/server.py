@@ -117,7 +117,7 @@ class ProgramCreate(BaseModel):
     player_name: str = Field(min_length=1, max_length=80)
     gender: Literal["mens", "womens"]
     starting_age: int = Field(ge=6, le=60)
-    skill_level: Literal["fundamental", "developing", "intermediate", "advanced", "professional"]
+    skill_level: Literal["fundamental", "developing", "intermediate", "advanced", "expert", "professional"]
 
 
 class SessionUpdate(BaseModel):

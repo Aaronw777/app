@@ -31,7 +31,7 @@ export default function Landing() {
             <p className="text-lg md:text-xl text-white/70 max-w-2xl mt-8 leading-relaxed">
               A weekly 1-hour training blueprint that takes any player from{" "}
               <span className="text-[#FFCD00] font-semibold">fundamental</span> to{" "}
-              <span className="text-[#FFCD00] font-semibold">professional</span> — engineered
+              <span className="text-[#FFCD00] font-semibold">expert</span> — engineered
               around FIBA rules and the Basketball Australia pathway to the NBL.
             </p>
             <div className="mt-10 flex flex-wrap gap-4">

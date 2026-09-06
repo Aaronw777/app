@@ -204,6 +204,8 @@ LEVEL_MAP = {
     "developing":  [1, 2, 2, 2, 3, 3, 3, 3, 4, 4],
     "intermediate":[2, 2, 3, 3, 3, 4, 4, 4, 4, 5],
     "advanced":    [3, 3, 4, 4, 4, 4, 5, 5, 5, 5],
+    "expert":      [4, 4, 4, 5, 5, 5, 5, 5, 5, 5],
+    # Backward compatibility for existing saved programs
     "professional":[4, 4, 4, 5, 5, 5, 5, 5, 5, 5],
 }
 

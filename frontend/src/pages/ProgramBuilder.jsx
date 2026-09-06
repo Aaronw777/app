@@ -9,7 +9,7 @@ const LEVELS = [
   { key: "developing", label: "Developing", desc: "Basic drills known. Working on consistency." },
   { key: "intermediate", label: "Intermediate", desc: "Local domestic competition level." },
   { key: "advanced", label: "Advanced", desc: "State / NBL1 aspirant. Complex reads." },
-  { key: "professional", label: "Professional", desc: "NBL / WNBL / national team prep." },
+  { key: "expert", label: "Expert", desc: "NBL / WNBL / national team prep." },
 ];
 
 export default function ProgramBuilder() {
