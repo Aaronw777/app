@@ -3,8 +3,72 @@ Curated basketball drill library aligned with FIBA rules and Basketball Australi
 (NBL / NBL1 / Local domestic). Drills are tagged by skill category and difficulty.
 """
 
-# Skill levels: 1=Fundamental, 2=Developing, 3=Intermediate, 4=Advanced, 5=Professional
+# Skill levels: 0=Mini-Ballers (Aussie Hoops), 1=Fundamental, 2=Developing, 3=Intermediate, 4=Advanced, 5=Expert
 DRILLS = [
+    # =========================================================================
+    # LEVEL 0 — MINI-BALLERS / AUSSIE HOOPS (Age 4+)
+    # Fun, movement-based, ball-familiarity drills. Modified rules & lowered rings.
+    # =========================================================================
+    {"id": "mb01", "name": "Animal Movements Warm-Up", "category": "Warm-Up", "level": 0,
+     "duration": 8, "description": "Bear crawls, crab walks, bunny hops, kangaroo jumps — baseline to half-court and back.",
+     "video": "https://www.youtube.com/embed/CtwjbNJf5N4",
+     "coach_notes": "Aussie Hoops staple. Builds coordination through play, not instruction."},
+    {"id": "mb02", "name": "Ball Familiarisation Circle", "category": "Ball Handling", "level": 0,
+     "duration": 6, "description": "Sit or stand — roll the ball around your head, waist, knees, ankles. Switch directions.",
+     "video": "https://www.youtube.com/embed/GVmm3BdKn7c",
+     "coach_notes": "Kids meet the ball. No dribble yet — build touch and confidence first."},
+    {"id": "mb03", "name": "Big Bounce & Catch", "category": "Ball Handling", "level": 0,
+     "duration": 6, "description": "Two-hand bounce the ball, catch it, repeat 10 times. Then one bounce with each hand.",
+     "video": "https://www.youtube.com/embed/GVmm3BdKn7c",
+     "coach_notes": "Use a size 5 (junior) ball. Aussie Hoops size 4 for under 8s is even better."},
+    {"id": "mb04", "name": "Statues Freeze Dribble", "category": "Ball Handling", "level": 0,
+     "duration": 6, "description": "Kids dribble around the key. On coach whistle: freeze in a statue pose. Whoever moves is out.",
+     "video": "https://www.youtube.com/embed/DxsTgspEnwI",
+     "coach_notes": "Game format keeps 4-6 year olds engaged. Rewards ball control."},
+    {"id": "mb05", "name": "Bin Ball Toss", "category": "Shooting", "level": 0,
+     "duration": 6, "description": "Underhand two-hand scoop-toss into a low bin or lowered ring (1.5-2m).",
+     "video": "https://www.youtube.com/embed/mn6mCwoOSfM",
+     "coach_notes": "Confidence first — never full-height rings for under 8s (Basketball Australia guideline)."},
+    {"id": "mb06", "name": "Two-Hand Push Shot", "category": "Shooting", "level": 0,
+     "duration": 8, "description": "Standing 1m from a low ring (2m). Push the ball up with both hands — legs jump for extra reach.",
+     "video": "https://www.youtube.com/embed/mn6mCwoOSfM",
+     "coach_notes": "Aussie Hoops progression before the one-hand shot at age 8+."},
+    {"id": "mb07", "name": "Rolling Pass Partners", "category": "Passing", "level": 0,
+     "duration": 6, "description": "Sit facing partner 3m away. Roll the ball back and forth using two hands. Then progress to a bounce pass.",
+     "video": "https://www.youtube.com/embed/y8Ah4qU4o30",
+     "coach_notes": "Teaches target eyes before power. Start with roll, add height as they improve."},
+    {"id": "mb08", "name": "Chest Pass Bullseye", "category": "Passing", "level": 0,
+     "duration": 6, "description": "Two-hand chest pass to a partner or into a taped bullseye on the wall from 2m.",
+     "video": "https://www.youtube.com/embed/y8Ah4qU4o30",
+     "coach_notes": "Thumbs finish pointing down. Cue: 'push the ball to the target'."},
+    {"id": "mb09", "name": "Traffic Lights", "category": "Footwork", "level": 0,
+     "duration": 6, "description": "Coach calls RED (stop / two-foot jump stop), YELLOW (walk-dribble), GREEN (jog-dribble).",
+     "video": "https://www.youtube.com/embed/G7uDPnA8sPY",
+     "coach_notes": "Introduces the FIBA jump stop through play. Add ORANGE = spin!"},
+    {"id": "mb10", "name": "Sharks & Minnows Dribble", "category": "Basketball IQ", "level": 0,
+     "duration": 10, "description": "Minnows dribble sideline to sideline. 1-2 sharks (no ball) try to tap their ball out of bounds.",
+     "video": "https://www.youtube.com/embed/gU0e9zXhCMg",
+     "coach_notes": "Aussie Hoops favourite. Teaches head-up dribbling under mild pressure."},
+    {"id": "mb11", "name": "Shadow Me", "category": "Defense", "level": 0,
+     "duration": 6, "description": "Partner up. One player is the shadow, mirrors every step of the leader for 30 seconds. Swap.",
+     "video": "https://www.youtube.com/embed/OuG9L3rccS8",
+     "coach_notes": "Introduces defensive slides without saying the word 'defence'."},
+    {"id": "mb12", "name": "Rebound Toss-Off-Wall", "category": "Rebounding", "level": 0,
+     "duration": 6, "description": "Toss the ball above head against a wall or backboard. Jump, catch it at the top, land two feet.",
+     "video": "https://www.youtube.com/embed/BAvzn12QCEQ",
+     "coach_notes": "Teaches 'chin the ball' safely. No contact needed."},
+    {"id": "mb13", "name": "Dribble Tag", "category": "Conditioning", "level": 0,
+     "duration": 6, "description": "Everyone dribbles inside the key. If tagged, do 5 star-jumps and rejoin.",
+     "video": "https://www.youtube.com/embed/EGMK0DcQ7fs",
+     "coach_notes": "Cardio + ball control disguised as a game."},
+    {"id": "mb14", "name": "Follow the Leader", "category": "Basketball IQ", "level": 0,
+     "duration": 6, "description": "Line up behind the coach — everyone dribbles and copies the coach's moves (spin, high dribble, low, walk-jog).",
+     "video": "https://www.youtube.com/embed/gU0e9zXhCMg",
+     "coach_notes": "Great first-week session opener for 4-6 year olds."},
+
+    # =========================================================================
+    # LEVEL 1+ — REGULAR PATHWAY (Age 8+)
+    # =========================================================================
     # BALL HANDLING
     {"id": "bh01", "name": "Stationary Two-Ball Pounding", "category": "Ball Handling", "level": 1,
      "duration": 6, "description": "Pound two balls at hip height simultaneously. Keep head up, wide base.",
@@ -200,6 +264,8 @@ WEEKS_BLUEPRINT = [
 
 # Skill level mapping — starting level shifts the drill difficulty band per week
 LEVEL_MAP = {
+    # Aussie Hoops / Mini-Ballers — mostly Level 0 with a taste of Level 1 by week 8
+    "mini_ballers":[0, 0, 0, 0, 0, 0, 0, 1, 1, 1],
     "fundamental": [1, 1, 1, 2, 2, 2, 2, 3, 3, 3],
     "developing":  [1, 2, 2, 2, 3, 3, 3, 3, 4, 4],
     "intermediate":[2, 2, 3, 3, 3, 4, 4, 4, 4, 5],
@@ -210,9 +276,10 @@ LEVEL_MAP = {
 }
 
 
-def _pick_drill(category: str, level: int):
+def _pick_drill(category: str, level: int, exclude_ids=None):
     """Pick the drill in `category` whose level is closest to `level` (prefer equal or lower)."""
-    candidates = [d for d in DRILLS if d["category"] == category]
+    exclude_ids = exclude_ids or set()
+    candidates = [d for d in DRILLS if d["category"] == category and d["id"] not in exclude_ids]
     if not candidates:
         return None
     # Sort by distance, prefer <= level
@@ -227,32 +294,56 @@ def build_program(gender: str, starting_age: int, skill_level: str) -> list:
         skill_level = "developing"
 
     level_progression = LEVEL_MAP[skill_level]
+    is_mini = skill_level == "mini_ballers"
+    # Aussie Hoops recommends shorter attention-span sessions for age 4-7
+    target_minutes = 40 if is_mini else 50
+
     sessions = []
 
     for wk in WEEKS_BLUEPRINT:
         week_level = level_progression[wk["week"] - 1]
         drills = []
-        # Session structure: 1 warm-up + 3 skill blocks fitting a 60min session
+        used = set()
+
+        # Session structure: 1 warm-up + skill blocks
         for category in wk["focus"]:
-            drill = _pick_drill(category, week_level)
+            drill = _pick_drill(category, week_level, used)
             if drill:
                 drills.append(drill)
+                used.add(drill["id"])
 
         # Add a closing IQ / application piece if space permits
         if wk["week"] >= 4 and "Basketball IQ" not in wk["focus"]:
-            iq = _pick_drill("Basketball IQ", week_level)
+            iq = _pick_drill("Basketball IQ", week_level, used)
             if iq:
                 drills.append(iq)
+                used.add(iq["id"])
 
         total = sum(d["duration"] for d in drills)
-        # Fill to ~55 min with an additional drill from the primary focus if under
-        primary = wk["focus"][1] if len(wk["focus"]) > 1 else wk["focus"][0]
-        while total < 50:
-            extra = _pick_drill(primary, week_level)
-            if not extra or extra in drills:
-                break
-            drills.append(extra)
-            total += extra["duration"]
+
+        # Rotate through all focus categories (not just primary) when filling to target
+        fill_categories = [c for c in wk["focus"] if c != "Warm-Up"] + ["Basketball IQ", "Conditioning"]
+        idx = 0
+        while total < target_minutes and idx < len(fill_categories) * 3:
+            cat = fill_categories[idx % len(fill_categories)]
+            extra = _pick_drill(cat, week_level, used)
+            if extra:
+                drills.append(extra)
+                used.add(extra["id"])
+                total += extra["duration"]
+            idx += 1
+
+        # Coach reference — Aussie Hoops copy for mini-ballers
+        if is_mini:
+            coach_ref = (
+                f"Aussie Hoops · {'Girls' if gender == 'womens' else 'Boys'} · Age {starting_age}+ · "
+                f"Modified FIBA rules (lowered ring, size 4-5 ball)"
+            )
+        else:
+            coach_ref = (
+                f"{'Opals / WNBL' if gender == 'womens' else 'Boomers / NBL'} pathway · "
+                f"Age {starting_age}+ · FIBA rules"
+            )
 
         sessions.append({
             "week": wk["week"],
@@ -260,10 +351,7 @@ def build_program(gender: str, starting_age: int, skill_level: str) -> list:
             "target_level": week_level,
             "total_minutes": total,
             "drills": drills,
-            "coach_reference": (
-                f"{'Opals / WNBL' if gender == 'womens' else 'Boomers / NBL'} pathway • "
-                f"Age {starting_age}+ • FIBA rules"
-            ),
+            "coach_reference": coach_ref,
             "completed": False,
             "notes": "",
         })

@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { ArrowRight } from "lucide-react";
 
 const LEVELS = [
+  { key: "mini_ballers", label: "Mini-Ballers", desc: "Aussie Hoops kids age 4-7. Ball familiarity & fun games." },
   { key: "fundamental", label: "Fundamental", desc: "Just picking up the ball. Beginner mechanics." },
   { key: "developing", label: "Developing", desc: "Basic drills known. Working on consistency." },
   { key: "intermediate", label: "Intermediate", desc: "Local domestic competition level." },
@@ -17,7 +18,7 @@ export default function ProgramBuilder() {
   const [form, setForm] = useState({
     player_name: "",
     gender: "mens",
-    starting_age: 14,
+    starting_age: 8,
     skill_level: "developing",
   });
   const [error, setError] = useState("");
@@ -109,14 +110,15 @@ export default function ProgramBuilder() {
           <input
             data-testid="builder-age-slider"
             type="range"
-            min="6"
+            min="4"
             max="35"
             value={form.starting_age}
             onChange={(e) => setForm({ ...form, starting_age: parseInt(e.target.value) })}
             className="w-full accent-[#FFCD00]"
           />
           <div className="flex justify-between text-xs uppercase tracking-[0.2em] text-white/40 mt-2">
-            <span>6</span>
+            <span>4</span>
+            <span>Aussie Hoops</span>
             <span>Junior (U14)</span>
             <span>Senior</span>
             <span>35+</span>

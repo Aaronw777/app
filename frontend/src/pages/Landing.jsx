@@ -30,7 +30,7 @@ export default function Landing() {
             </h1>
             <p className="text-lg md:text-xl text-white/70 max-w-2xl mt-8 leading-relaxed">
               A weekly 1-hour training blueprint that takes any player from{" "}
-              <span className="text-[#FFCD00] font-semibold">fundamental</span> to{" "}
+              <span className="text-[#FFCD00] font-semibold">Aussie Hoops mini-baller</span> to{" "}
               <span className="text-[#FFCD00] font-semibold">expert</span> — engineered
               around FIBA rules and the Basketball Australia pathway to the NBL.
             </p>
@@ -79,7 +79,7 @@ export default function Landing() {
             { n: "10", l: "Week Program" },
             { n: "60", l: "Minute Sessions" },
             { n: "40+", l: "Curated Drills" },
-            { n: "5", l: "Skill Tiers" },
+            { n: "6", l: "Skill Tiers" },
           ].map((s) => (
             <div key={s.l} className="text-left">
               <div className="font-display text-5xl md:text-6xl text-[#FFCD00] leading-none">
