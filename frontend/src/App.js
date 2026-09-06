@@ -87,7 +87,18 @@ function App() {
           <div className="max-w-7xl mx-auto px-6 space-y-4 text-white/40">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-xs uppercase tracking-[0.25em]">
               <div>Court Mastery · Inspired by the Basketball Australia pathway</div>
-              <div>© 2026</div>
+              <div className="flex items-center gap-4">
+                <a
+                  href="/court-mastery-features.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid="footer-features-pdf"
+                  className="hover:text-[#FFCD00] transition-colors"
+                >
+                  Features PDF
+                </a>
+                <span>© 2026</span>
+              </div>
             </div>
             <p
               data-testid="footer-disclaimer"
