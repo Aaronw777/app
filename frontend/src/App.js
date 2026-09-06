@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import { AuthProvider } from "@/context/AuthContext";
 import Nav from "@/components/Nav";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import InstallPrompt from "@/components/InstallPrompt";
 import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
@@ -125,6 +126,7 @@ function App() {
             },
           }}
         />
+        <InstallPrompt />
       </AuthProvider>
     </BrowserRouter>
   );
