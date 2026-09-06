@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
-import { ChevronRight, Check, Printer, ArrowLeft } from "lucide-react";
+import { ChevronRight, Check, Printer, ArrowLeft, Users, FileText } from "lucide-react";
 import { toast } from "sonner";
 
 export default function ProgramView() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [program, setProgram] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -57,13 +58,30 @@ export default function ProgramView() {
             {program.gender === "womens" ? "women's" : "men's"} basketball pathway
           </p>
         </div>
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-3 md:gap-6 flex-wrap">
           <div>
             <div className="text-xs uppercase tracking-[0.2em] text-white/50">Progress</div>
             <div className="font-display text-4xl text-[#FFCD00]">
               {completed}/{program.sessions.length}
             </div>
           </div>
+          <button
+            onClick={async () => {
+              const name = window.prompt("Team name?", `${program.player_name}'s Squad`);
+              if (!name) return;
+              try {
+                const { data } = await api.post("/teams", { name, program_id: program.id });
+                toast.success("Team created");
+                navigate(`/teams/${data.id}`);
+              } catch {
+                toast.error("Failed to create team");
+              }
+            }}
+            data-testid="program-create-team-btn"
+            className="btn-ghost no-print"
+          >
+            <Users size={14} /> Create Team
+          </button>
           <button
             onClick={() => window.print()}
             data-testid="program-print-btn"
@@ -80,32 +98,37 @@ export default function ProgramView() {
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 stagger">
         {program.sessions.map((s) => (
-          <Link
-            key={s.week}
-            to={`/programs/${program.id}/week/${s.week}`}
-            data-testid={`week-card-${s.week}`}
-            className="card-tactical block group relative"
-          >
+          <div key={s.week} className="card-tactical group relative" data-testid={`week-card-${s.week}`}>
             {s.completed && (
               <div className="absolute top-4 right-4 w-7 h-7 bg-[#FFCD00] text-black rounded-full flex items-center justify-center">
                 <Check size={14} strokeWidth={3} />
               </div>
             )}
-            <div className="font-display text-xs uppercase tracking-[0.3em] text-[#FFCD00] mb-2">
-              Week {String(s.week).padStart(2, "0")}
-            </div>
-            <div className="font-display text-2xl uppercase tracking-wide leading-tight mb-4">
-              {s.theme}
-            </div>
-            <div className="flex items-center justify-between text-xs uppercase tracking-[0.2em] text-white/50 mb-4">
-              <span>{s.drills.length} Drills</span>
-              <span>{s.total_minutes} Min</span>
-              <span>Tier {s.target_level}/5</span>
-            </div>
-            <div className="flex items-center gap-1 text-xs uppercase tracking-[0.2em] text-white/60 group-hover:text-[#FFCD00] transition-colors">
-              Open session <ChevronRight size={12} />
-            </div>
-          </Link>
+            <Link to={`/programs/${program.id}/week/${s.week}`} className="block">
+              <div className="font-display text-xs uppercase tracking-[0.3em] text-[#FFCD00] mb-2">
+                Week {String(s.week).padStart(2, "0")}
+              </div>
+              <div className="font-display text-2xl uppercase tracking-wide leading-tight mb-4">
+                {s.theme}
+              </div>
+              <div className="flex items-center justify-between text-xs uppercase tracking-[0.2em] text-white/50 mb-4">
+                <span>{s.drills.length} Drills</span>
+                <span>{s.total_minutes} Min</span>
+                <span>Tier {s.target_level}/5</span>
+              </div>
+              <div className="flex items-center gap-1 text-xs uppercase tracking-[0.2em] text-white/60 group-hover:text-[#FFCD00] transition-colors">
+                Open session <ChevronRight size={12} />
+              </div>
+            </Link>
+            <Link
+              to={`/programs/${program.id}/week/${s.week}/handout`}
+              data-testid={`week-handout-${s.week}`}
+              className="mt-3 pt-3 border-t border-white/10 flex items-center gap-1.5 text-[10px] uppercase tracking-[0.25em] text-white/50 hover:text-[#FFCD00] transition-colors no-print"
+            >
+              <FileText size={11} />
+              {program.skill_level === "mini_ballers" ? "Parent Handout" : "Home Sheet"}
+            </Link>
+          </div>
         ))}
       </div>
 

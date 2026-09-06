@@ -44,6 +44,15 @@ export default function Nav() {
               >
                 Dashboard
               </Link>
+              <Link
+                to="/teams"
+                data-testid="nav-teams-link"
+                className={`text-xs uppercase tracking-[0.2em] font-semibold hover:text-[#FFCD00] transition-colors ${
+                  loc.pathname.startsWith("/teams") ? "text-[#FFCD00]" : "text-white/70"
+                }`}
+              >
+                Teams
+              </Link>
               <div className="hidden sm:flex items-center gap-2 text-white/60 text-sm border-l border-white/10 pl-4">
                 <User size={14} />
                 <span data-testid="nav-user-name">{user.name}</span>

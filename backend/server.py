@@ -125,6 +125,20 @@ class SessionUpdate(BaseModel):
     notes: Optional[str] = None
 
 
+class TeamCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=80)
+    program_id: str
+
+
+class PlayerAdd(BaseModel):
+    name: str = Field(min_length=1, max_length=80)
+
+
+class RosterSessionUpdate(BaseModel):
+    completed: Optional[bool] = None
+    notes: Optional[str] = None
+
+
 # ============ Auth routes ============
 @api_router.post("/auth/register")
 async def register(payload: RegisterInput, response: Response):
@@ -258,6 +272,133 @@ async def delete_program(program_id: str, user: dict = Depends(get_current_user)
     result = await db.programs.delete_one({"id": program_id, "user_id": user["id"]})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Program not found")
+    # Also delete any teams referencing this program
+    await db.teams.delete_many({"user_id": user["id"], "program_id": program_id})
+    return {"ok": True}
+
+
+# ============ Teams ============
+@api_router.post("/teams")
+async def create_team(payload: TeamCreate, user: dict = Depends(get_current_user)):
+    program = await db.programs.find_one({"id": payload.program_id, "user_id": user["id"]})
+    if not program:
+        raise HTTPException(status_code=404, detail="Program not found")
+    team_id = str(uuid.uuid4())
+    doc = {
+        "id": team_id,
+        "user_id": user["id"],
+        "name": payload.name.strip(),
+        "program_id": payload.program_id,
+        "roster": [],
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.teams.insert_one(doc)
+    doc.pop("_id", None)
+    return doc
+
+
+@api_router.get("/teams")
+async def list_teams(user: dict = Depends(get_current_user)):
+    teams = await db.teams.find({"user_id": user["id"]}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    # Attach program name for display
+    program_ids = list({t["program_id"] for t in teams})
+    programs = await db.programs.find(
+        {"id": {"$in": program_ids}, "user_id": user["id"]},
+        {"_id": 0, "id": 1, "player_name": 1, "skill_level": 1, "sessions": 1},
+    ).to_list(200)
+    program_lookup = {p["id"]: p for p in programs}
+    for t in teams:
+        p = program_lookup.get(t["program_id"])
+        t["program_name"] = p["player_name"] if p else "Deleted program"
+        t["program_skill_level"] = p["skill_level"] if p else None
+        t["total_weeks"] = len(p["sessions"]) if p else 10
+        t["roster_count"] = len(t.get("roster", []))
+    return teams
+
+
+@api_router.get("/teams/{team_id}")
+async def get_team(team_id: str, user: dict = Depends(get_current_user)):
+    team = await db.teams.find_one({"id": team_id, "user_id": user["id"]}, {"_id": 0})
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+    program = await db.programs.find_one({"id": team["program_id"], "user_id": user["id"]}, {"_id": 0})
+    if program:
+        # Slim program sessions (theme only, no drill payload)
+        program["sessions_summary"] = [
+            {"week": s["week"], "theme": s["theme"], "total_minutes": s["total_minutes"], "target_level": s["target_level"]}
+            for s in program.get("sessions", [])
+        ]
+    team["program"] = program
+    return team
+
+
+@api_router.delete("/teams/{team_id}")
+async def delete_team(team_id: str, user: dict = Depends(get_current_user)):
+    result = await db.teams.delete_one({"id": team_id, "user_id": user["id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Team not found")
+    return {"ok": True}
+
+
+@api_router.post("/teams/{team_id}/players")
+async def add_player(team_id: str, payload: PlayerAdd, user: dict = Depends(get_current_user)):
+    team = await db.teams.find_one({"id": team_id, "user_id": user["id"]})
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+    player = {
+        "player_id": str(uuid.uuid4()),
+        "player_name": payload.name.strip(),
+        "added_at": datetime.now(timezone.utc).isoformat(),
+        "sessions": {},
+    }
+    await db.teams.update_one(
+        {"id": team_id, "user_id": user["id"]},
+        {"$push": {"roster": player}},
+    )
+    return player
+
+
+@api_router.delete("/teams/{team_id}/players/{player_id}")
+async def remove_player(team_id: str, player_id: str, user: dict = Depends(get_current_user)):
+    result = await db.teams.update_one(
+        {"id": team_id, "user_id": user["id"]},
+        {"$pull": {"roster": {"player_id": player_id}}},
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Player not found")
+    return {"ok": True}
+
+
+@api_router.patch("/teams/{team_id}/players/{player_id}/sessions/{week}")
+async def update_roster_session(
+    team_id: str,
+    player_id: str,
+    week: int,
+    payload: RosterSessionUpdate,
+    user: dict = Depends(get_current_user),
+):
+    team = await db.teams.find_one({"id": team_id, "user_id": user["id"]})
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+    roster = team.get("roster", [])
+    updated = False
+    for p in roster:
+        if p["player_id"] == player_id:
+            sess = p.setdefault("sessions", {})
+            entry = sess.get(str(week), {"completed": False, "notes": ""})
+            if payload.completed is not None:
+                entry["completed"] = payload.completed
+            if payload.notes is not None:
+                entry["notes"] = payload.notes
+            sess[str(week)] = entry
+            updated = True
+            break
+    if not updated:
+        raise HTTPException(status_code=404, detail="Player not found")
+    await db.teams.update_one(
+        {"id": team_id, "user_id": user["id"]},
+        {"$set": {"roster": roster}},
+    )
     return {"ok": True}
 
 
@@ -272,6 +413,7 @@ async def root():
 async def startup():
     await db.users.create_index("email", unique=True)
     await db.programs.create_index("user_id")
+    await db.teams.create_index("user_id")
 
     # Seed admin
     admin_email = os.environ.get("ADMIN_EMAIL", "").lower().strip()

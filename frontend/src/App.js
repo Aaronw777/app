@@ -11,6 +11,9 @@ import Dashboard from "@/pages/Dashboard";
 import ProgramBuilder from "@/pages/ProgramBuilder";
 import ProgramView from "@/pages/ProgramView";
 import SessionView from "@/pages/SessionView";
+import ParentHandout from "@/pages/ParentHandout";
+import Teams from "@/pages/Teams";
+import TeamDetail from "@/pages/TeamDetail";
 
 function App() {
   return (
@@ -51,6 +54,30 @@ function App() {
               element={
                 <ProtectedRoute>
                   <SessionView />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/programs/:id/week/:week/handout"
+              element={
+                <ProtectedRoute>
+                  <ParentHandout />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/teams"
+              element={
+                <ProtectedRoute>
+                  <Teams />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/teams/:id"
+              element={
+                <ProtectedRoute>
+                  <TeamDetail />
                 </ProtectedRoute>
               }
             />

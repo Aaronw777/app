@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "@/lib/api";
-import { ArrowLeft, Check, Printer, Clock, Zap, ExternalLink, Play } from "lucide-react";
+import { ArrowLeft, Check, Printer, Clock, Zap, ExternalLink, Play, FileText } from "lucide-react";
+import SessionTimer from "@/components/SessionTimer";
+import CourtDiagram from "@/components/CourtDiagram";
 import { toast } from "sonner";
 
 export default function SessionView() {
@@ -83,6 +85,13 @@ export default function SessionView() {
           <p className="text-white/60 mt-3">{session.coach_reference}</p>
         </div>
         <div className="flex flex-wrap gap-3 no-print">
+          <Link
+            to={`/programs/${id}/week/${weekNum}/handout`}
+            data-testid="session-handout-link"
+            className="btn-ghost"
+          >
+            <FileText size={14} /> Parent Handout
+          </Link>
           <button
             data-testid="session-print-btn"
             onClick={() => window.print()}
@@ -100,6 +109,8 @@ export default function SessionView() {
           </button>
         </div>
       </div>
+
+      <SessionTimer drills={session.drills} />
 
       <div className="space-y-6 stagger">
         {session.drills.map((d, idx) => (
@@ -173,6 +184,9 @@ export default function SessionView() {
                     </a>
                   );
                 })()}
+              </div>
+              <div className="md:col-span-3 mt-2">
+                <CourtDiagram category={d.category} label={d.name} />
               </div>
             </div>
           </div>
