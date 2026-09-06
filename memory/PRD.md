@@ -29,14 +29,32 @@ Create an app that helps create a basketball training program with weekly 1 hour
 ## Implemented (2026-02)
 - ✅ Auth (register/login/logout/me)
 - ✅ Program CRUD + session progress patch
-- ✅ Curated drill library w/ YouTube video links
+- ✅ Curated drill library (54+ drills) with YouTube search links (copyright safe)
+- ✅ Aussie Hoops "Mini-Baller" tier (age 4+)
 - ✅ Landing / Dashboard / Builder / Program overview / Session detail
-- ✅ Print-to-PDF via `window.print()` with print CSS
+- ✅ Print-to-PDF via `window.print()` with print CSS + Parent Handouts + Roster PDF
 - ✅ Dark "Performance Pro" theme (Anton + DM Sans, Australian gold accents)
+- ✅ Session timer / stopwatch component
+- ✅ Team roster mode — assign program to multiple athletes, mark completion
+- ✅ Amend Session (add/remove/reorder drills, create custom drills)
+- ✅ Drill-specific Key Points (coaching cues)
+- ✅ PlayHQ dashboard link
+- ✅ Progressive Web App (manifest, service worker, icons)
+- ✅ File & Media storage (Emergent Object Storage): team logos, player photos, drill media, session photos, program cover
+- ✅ Expanded video uploads — MP4, MOV, WebM, AVI, MKV, 3GP, HEIC — up to 500MB (verified iter 5)
 
 ## Prioritised Backlog
-- P1: Drill diagrams / court-schematic SVGs on top of YouTube embeds
-- P1: Session timer / stopwatch for coaches
-- P2: Team mode — assign one program to multiple athletes
-- P2: Video upload for player self-review
+- P1: Program Cover Video (motion "hype reel" banner)
+- P1: Player Bio Cards (tap-through profile: number, position, stats)
+- P1: Attendance Register + Assistant Coach team login
+- P1: Streamed video player (chunked; avoid 500MB RAM spike on download — see iter 5 code review)
+- P2: Post-Session Gallery / end-of-program highlight reel
+- P2: Custom Drill Community Library
+- P2: PWA Push Notifications + Offline Program Cache
 - P2: Shareable public link to a program (view-only)
+
+## Known Tech Debt (from iter 5 review, non-blocking)
+- `server.py` upload_media loads full file into RAM before size check — migrate to streaming with early abort
+- `storage._get` buffers full object for download — swap to StreamingResponse for 500MB videos
+- Auth token extraction duplicated in `download_media` — extract shared dependency
+- `MIME_TYPES` contains dead `svg` mapping (not in ALLOWED_IMAGE)

@@ -1,0 +1,25 @@
+{
+  "summary": "Iteration 5 verified the expanded video MIME support and the 500MB size cap on POST /api/media/upload. New pytest file /app/backend/tests/test_media_iter5.py — 19/19 passed in 9.5s. Coverage: (a) Auth: seeded admin coach@basketballaus.com logs in, response sets access_token cookie AND returns Bearer token; /api/auth/me works via both cookie session and Bearer header. (b) Image happy path: PNG team-logo uploads and round-trips. (c) All 6 new video MIME types uploaded successfully with ~1MB payloads: video/mp4, video/quicktime, video/webm, video/x-msvideo, video/3gpp, video/x-matroska — each returned {id, kind, url, size, content_type, storage_path} and stored the exact content_type. (d) Rejections: invalid kind -> 400; application/x-msdownload -> 400 'not allowed'; 26MB PNG -> 400 'too large'; unit-level test on storage.upload_bytes with a __len__-only stub of size 500MB+1 for video/mp4 -> raises ValueError containing 'too large' and '500' (no network/RAM allocation). Also asserted storage.MAX_VIDEO_BYTES == 500*1024*1024, MAX_IMAGE_BYTES == 25*1024*1024, and all 6 new video mimes present in ALLOWED_VIDEO. (e) Ownership/lifecycle for a video: 403 for other user, 200 for owner with Content-Type video/mp4, soft-delete then 404. (f) Regression: /api/programs POST + list + detail OK; /api/teams full CRUD OK (create, list, get, delete->404).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_media_iter5.py",
+    "/app/test_reports/pytest/iter5_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py upload_media reads the entire file into memory with `await file.read()` BEFORE size validation — a malicious client can force the backend to allocate up to ~500MB (or more, since the check happens post-read) per request. Consider streaming to a temp file and enforcing MAX_VIDEO_BYTES incrementally via `while chunk := await file.read(1<<20)` with an early abort, or use Starlette's `request.stream()` with a running byte counter.",
+    "storage.py 'File too large' message uses `max_bytes // (1024*1024)` MB but does not distinguish image vs video in the error text — end users uploading a 30MB image see 'max 25 MB' which is fine, but a 600MB video sees 'max 500 MB' with no hint the limit is video-specific. Minor UX only.",
+    "storage.py:_get still buffers the whole object in RAM before FastAPI Response emits it (carried over from iter 4). For 500MB videos this is a ~500MB memory spike per download; migrate to StreamingResponse with requests(..., stream=True).iter_content(65536).",
+    "server.py:487 download_media reimplements token extraction (cookie/Bearer/?auth=) instead of a shared dependency — drift risk when auth rules change (carried over from iter 4).",
+    "MIME_TYPES contains 'svg' -> image/svg+xml but 'image/svg+xml' is intentionally NOT in ALLOWED_IMAGE; the mapping is dead weight and could mislead future contributors. Suggest dropping the svg entry from MIME_TYPES."
+  ],
+  "updated_files": ["/app/backend/tests/test_media_iter5.py"],
+  "success_rate": {"backend": "100%", "frontend": "not tested (backend-only per request)"},
+  "test_credentials": "coach@basketballaus.com / CoachAdmin2026! (admin) — verified working with cookie + Bearer",
+  "seed_data_creation": "Registered two throwaway users TEST_iter5_a_*@test.com and TEST_iter5_b_*@test.com with password testpass1. Uploaded 1 PNG + 6 small fake-video blobs (~1MB each) via user_a; the video/mp4 blob was subsequently soft-deleted by the test. Created two TEST_iter5* programs and one TEST_iter5_Team (deleted at end of test). No admin data touched.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Media stack including 500MB cap + expanded MIME set is fully green. Re-run with `pytest /app/backend/tests/test_media_iter5.py -o addopts=''`. The 501MB rejection is validated at the storage.upload_bytes unit level (no network) because a real 500MB HTTP upload is impractical in this environment. If a future change moves the size check to a streaming path, add an integration-level oversize test that sends chunked bytes and confirms the server aborts early with 400 'File too large'.",
+  "rca of the issue": "N/A — no failing tests."
+}
