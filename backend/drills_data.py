@@ -1,6 +1,9 @@
 """
-Curated basketball drill library aligned with FIBA rules and Basketball Australia pathways
-(NBL / NBL1 / Local domestic). Drills are tagged by skill category and difficulty.
+Curated basketball drill library. Content is written descriptively and inspired by
+FIBA-style rules and the well-known Australian junior-to-senior basketball pathway.
+Court Mastery is not affiliated with FIBA, Basketball Australia, the NBL, WNBL,
+NBL1 or Aussie Hoops. All names remain the property of their respective owners.
+Drills are tagged by skill category and difficulty.
 """
 
 # Skill levels: 0=Mini-Ballers (Aussie Hoops), 1=Fundamental, 2=Developing, 3=Intermediate, 4=Advanced, 5=Expert
@@ -159,7 +162,7 @@ DRILLS = [
     {"id": "fw04", "name": "Reverse Pivot Attack", "category": "Footwork", "level": 4,
      "duration": 8, "description": "Post catch, reverse pivot into face-up, one-dribble drive.",
      "video": "https://www.youtube.com/embed/eCyC3E5f2xY",
-     "coach_notes": "NBL bigs like Bryce Cotton screen combos work off pivot mastery."},
+     "coach_notes": "NBL-level bigs use pivot mastery to create counter finishes."},
     {"id": "fw05", "name": "Combo Finish Package", "category": "Footwork", "level": 5,
      "duration": 12, "description": "Chain: hesitation → euro → step-through → reverse layup on both sides.",
      "video": "https://www.youtube.com/embed/BuInf68q5rY",
@@ -213,7 +216,7 @@ DRILLS = [
     {"id": "cn02", "name": "17s — Sideline to Sideline", "category": "Conditioning", "level": 3,
      "duration": 5, "description": "17 sideline touches in under 60 seconds. NBL benchmark 65s.",
      "video": "https://www.youtube.com/embed/pxdmZv9nH50",
-     "coach_notes": "Basketball Australia AIS testing protocol."},
+     "coach_notes": "Common high-performance testing protocol used across Australian pathway programs."},
     {"id": "cn03", "name": "Yo-Yo Intermittent Recovery", "category": "Conditioning", "level": 4,
      "duration": 10, "description": "20m shuttle with progressive tempo. Track level reached.",
      "video": "https://www.youtube.com/embed/DePOTfshMzs",
@@ -336,13 +339,13 @@ def build_program(gender: str, starting_age: int, skill_level: str) -> list:
         # Coach reference — Aussie Hoops copy for mini-ballers
         if is_mini:
             coach_ref = (
-                f"Aussie Hoops · {'Girls' if gender == 'womens' else 'Boys'} · Age {starting_age}+ · "
-                f"Modified FIBA rules (lowered ring, size 4-5 ball)"
+                f"Aussie-Hoops-style · {'Girls' if gender == 'womens' else 'Boys'} · Age {starting_age}+ · "
+                f"Modified FIBA-style rules (lowered ring, size 4-5 ball)"
             )
         else:
             coach_ref = (
-                f"{'Opals / WNBL' if gender == 'womens' else 'Boomers / NBL'} pathway · "
-                f"Age {starting_age}+ · FIBA rules"
+                f"Inspired by the Australian {'women' if gender == 'womens' else 'men'}'s "
+                f"basketball pathway · Age {starting_age}+ · FIBA-style rules"
             )
 
         sessions.append({

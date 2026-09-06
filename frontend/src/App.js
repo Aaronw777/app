@@ -57,9 +57,23 @@ function App() {
           </Routes>
         </main>
         <footer className="border-t border-white/10 py-8 mt-16 no-print">
-          <div className="max-w-7xl mx-auto px-6 flex items-center justify-between text-xs uppercase tracking-[0.25em] text-white/40">
-            <div>Court Mastery · FIBA · Basketball Australia Pathway</div>
-            <div>© 2026</div>
+          <div className="max-w-7xl mx-auto px-6 space-y-4 text-white/40">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-xs uppercase tracking-[0.25em]">
+              <div>Court Mastery · Inspired by the Basketball Australia pathway</div>
+              <div>© 2026</div>
+            </div>
+            <p
+              data-testid="footer-disclaimer"
+              className="text-[11px] leading-relaxed max-w-4xl text-white/35 normal-case tracking-normal"
+            >
+              Court Mastery is an independent training tool. It is not affiliated with,
+              endorsed by, or sponsored by Basketball Australia, the NBL, WNBL, NBL1,
+              Aussie Hoops, the Australian Boomers, the Australian Opals, or FIBA. All
+              names and marks referenced belong to their respective owners and are used
+              here descriptively to help coaches contextualise the drills. Linked video
+              tutorials are hosted on YouTube by their original creators; Court Mastery
+              claims no ownership over that content.
+            </p>
           </div>
         </footer>
         <Toaster

@@ -127,15 +127,12 @@ export default function SessionView() {
                   {d.coach_notes}
                 </div>
                 {(() => {
-                  const idMatch = (d.video || "").match(/embed\/([\w-]+)/);
-                  const watchUrl = idMatch
-                    ? `https://www.youtube.com/watch?v=${idMatch[1]}`
-                    : null;
-                  if (!watchUrl) return null;
+                  const searchQuery = encodeURIComponent(`${d.name} basketball drill tutorial`);
+                  const watchUrl = `https://www.youtube.com/results?search_query=${searchQuery}`;
                   return (
                     <div className="mt-4 flex items-start gap-2 text-xs">
                       <span className="uppercase tracking-[0.2em] text-white/40 font-bold shrink-0 mt-0.5">
-                        Video:
+                        Find video:
                       </span>
                       <a
                         href={watchUrl}
@@ -144,7 +141,7 @@ export default function SessionView() {
                         data-testid={`drill-video-url-${d.id}`}
                         className="text-[#FFCD00] hover:underline break-all font-mono"
                       >
-                        {watchUrl}
+                        Search YouTube for &quot;{d.name}&quot;
                       </a>
                     </div>
                   );
@@ -152,40 +149,25 @@ export default function SessionView() {
               </div>
               <div className="aspect-video bg-black/60 border border-white/10 rounded-sm overflow-hidden relative group">
                 {(() => {
-                  const idMatch = (d.video || "").match(/embed\/([\w-]+)/);
-                  const videoId = idMatch ? idMatch[1] : null;
-                  const watchUrl = videoId
-                    ? `https://www.youtube.com/watch?v=${videoId}`
-                    : `https://www.youtube.com/results?search_query=${encodeURIComponent(d.name + " basketball drill")}`;
-                  const thumb = videoId
-                    ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
-                    : null;
+                  const searchQuery = encodeURIComponent(`${d.name} basketball drill tutorial`);
+                  const watchUrl = `https://www.youtube.com/results?search_query=${searchQuery}`;
                   return (
                     <a
                       href={watchUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       data-testid={`drill-video-link-${d.id}`}
-                      className="block w-full h-full relative"
+                      className="block w-full h-full relative bg-gradient-to-br from-[#1a1a1a] to-black"
                     >
-                      {thumb && (
-                        <img
-                          src={thumb}
-                          alt={d.name}
-                          loading="lazy"
-                          className="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity"
-                          onError={(e) => {
-                            e.currentTarget.style.display = "none";
-                          }}
-                        />
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
                       <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center px-4">
                         <div className="w-14 h-14 bg-[#FFCD00] text-black flex items-center justify-center rounded-full group-hover:scale-110 transition-transform">
                           <Play size={22} fill="currentColor" />
                         </div>
                         <div className="text-xs uppercase tracking-[0.25em] text-white font-bold flex items-center gap-1">
-                          Watch on YouTube <ExternalLink size={11} />
+                          Find on YouTube <ExternalLink size={11} />
+                        </div>
+                        <div className="text-[10px] uppercase tracking-[0.2em] text-white/40 max-w-[180px]">
+                          Opens a search for tutorials by community coaches
                         </div>
                       </div>
                     </a>

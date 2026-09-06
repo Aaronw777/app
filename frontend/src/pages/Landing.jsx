@@ -17,8 +17,8 @@ export default function Landing() {
         <div className="relative max-w-7xl mx-auto px-6 py-24 md:py-36 grid md:grid-cols-12 gap-8">
           <div className="md:col-span-8">
             <div className="flex items-center gap-3 mb-6">
-              <span className="tag tag-gold" data-testid="hero-tag">FIBA · NBL · WNBL Pathway</span>
-              <span className="tag">Basketball Australia</span>
+              <span className="tag tag-gold" data-testid="hero-tag">FIBA-Style Rules</span>
+              <span className="tag">Aussie Pathway Inspired</span>
             </div>
             <h1
               data-testid="hero-title"
@@ -30,9 +30,9 @@ export default function Landing() {
             </h1>
             <p className="text-lg md:text-xl text-white/70 max-w-2xl mt-8 leading-relaxed">
               A weekly 1-hour training blueprint that takes any player from{" "}
-              <span className="text-[#FFCD00] font-semibold">Aussie Hoops mini-baller</span> to{" "}
-              <span className="text-[#FFCD00] font-semibold">expert</span> — engineered
-              around FIBA rules and the Basketball Australia pathway to the NBL.
+              <span className="text-[#FFCD00] font-semibold">Aussie-Hoops-style mini-baller</span> to{" "}
+              <span className="text-[#FFCD00] font-semibold">expert</span> — built around
+              FIBA-style rules and inspired by the Australian junior-to-senior basketball pathway.
             </p>
             <div className="mt-10 flex flex-wrap gap-4">
               <Link
@@ -112,8 +112,8 @@ export default function Landing() {
             },
             {
               i: Trophy,
-              t: "NBL Pathway",
-              d: "Drills reference Boomers, Opals, NBL1 & WNBL benchmarks used by Basketball Australia.",
+              t: "Aussie Pathway",
+              d: "Drills reference the well-known Australian junior-to-elite progression used by local domestic clubs.",
             },
             {
               i: Zap,

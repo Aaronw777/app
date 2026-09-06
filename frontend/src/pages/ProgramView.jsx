@@ -53,8 +53,8 @@ export default function ProgramView() {
             {program.player_name}
           </h1>
           <p className="text-white/60 mt-3">
-            FIBA rules · Basketball Australia pathway ·{" "}
-            {program.gender === "womens" ? "Opals / WNBL / NBL1 Women" : "Boomers / NBL / NBL1 Men"}
+            FIBA-style rules · Inspired by the Australian{" "}
+            {program.gender === "womens" ? "women's" : "men's"} basketball pathway
           </p>
         </div>
         <div className="flex items-center gap-6">
@@ -120,8 +120,7 @@ export default function ProgramView() {
               {program.player_name} · {s.total_minutes} minutes · Tier {s.target_level}
             </p>
             {s.drills.map((d) => {
-              const m = (d.video || "").match(/embed\/([\w-]+)/);
-              const watch = m ? `https://www.youtube.com/watch?v=${m[1]}` : "";
+              const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(d.name + " basketball drill tutorial")}`;
               return (
                 <div key={d.id} className="mb-4 pb-4 border-b">
                   <div className="font-semibold">
@@ -129,7 +128,7 @@ export default function ProgramView() {
                   </div>
                   <div className="text-sm">{d.description}</div>
                   <div className="text-xs italic mt-1">Coach: {d.coach_notes}</div>
-                  {watch && <div className="text-xs mt-1">Video: {watch}</div>}
+                  <div className="text-xs mt-1">Find video: {searchUrl}</div>
                 </div>
               );
             })}

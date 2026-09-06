@@ -47,7 +47,7 @@ export default function ProgramBuilder() {
       </h1>
       <p className="text-white/60 mt-3 mb-12 max-w-2xl">
         Answer four questions. We&apos;ll generate a 10-week, 60-minute-per-session training plan
-        aligned to FIBA rules and Basketball Australia&apos;s competitive pathway.
+        built around FIBA-style rules and inspired by the Australian junior-to-elite basketball pathway.
       </p>
 
       <form onSubmit={submit} className="space-y-10">
@@ -74,8 +74,8 @@ export default function ProgramBuilder() {
           </label>
           <div className="grid grid-cols-2 gap-3">
             {[
-              { k: "mens", l: "Mens", s: "Boomers / NBL / NBL1 Men" },
-              { k: "womens", l: "Womens", s: "Opals / WNBL / NBL1 Women" },
+              { k: "mens", l: "Mens", s: "Senior & elite men's pathway inspired" },
+              { k: "womens", l: "Womens", s: "Senior & elite women's pathway inspired" },
             ].map((g) => (
               <button
                 type="button"
