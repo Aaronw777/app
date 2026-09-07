@@ -48,6 +48,7 @@ Create an app that helps create a basketball training program with weekly 1 hour
 - ✅ **[iter 6] Program Cover Hype Reel** — cover accepts videos, plays muted-autoplay-loop on the Dashboard
 - ✅ **[iter 6] Streamed Video Player** — GET /api/media/{id} uses StreamingResponse with HTTP Range (206 Partial Content) — 500MB clips no longer buffer in RAM
 - ✅ **[iter 6] User Guide PDF** — /public/court-mastery-features.pdf regenerated as a full step-by-step manual covering all 16 features
+- ✅ **[iter 7] Individual Daily Program (per player)** — One 1-hour tailored plan per player, up to 10 drills from library or custom; same session timer as team programs; native camera capture (Photo/Video) opens phone camera and uploads instantly; coach-attached reference media viewable during each drill; head coach + assistants both edit and capture; User Guide PDF updated to 17 sections
 
 ## Prioritised Backlog
 - P2: Post-Session Gallery / end-of-program highlight reel

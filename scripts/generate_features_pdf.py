@@ -134,7 +134,23 @@ FEATURES = [
         ],
     ),
     (
-        "9. Assistant Coach Access",
+        "9. Individual Daily Program (per player)",
+        "Build a bespoke 1-hour training plan for a single player with up to 10 drills, plus a stopwatch and phone-camera capture.",
+        [
+            "Open a Team Roster → tap a player row to open their Player Profile.",
+            "Under Individual Daily Program, tap the panel to open the plan page.",
+            "Empty plans open in Edit mode. Tap Library Drill to pick from the 54+ curated drills, or Custom Drill to enter your own (name, category, minutes, level, description, coach notes and optional reference photo/video).",
+            "Use the up/down arrows to reorder drills and the trash icon to remove one.",
+            "The counter at the top shows drills/10 and total minutes.",
+            "Tap Save Plan when you're happy. You'll drop into Run mode with the timer.",
+            "In Run mode the Session Timer auto-loads each drill's duration. Tap ▶ Start / ⏸ Pause / ⏭ Skip / ↺ Reset just like team sessions. It beeps and auto-advances.",
+            "Under each drill's Session Captures block, tap Photo to open the phone's rear camera and shoot a still, or Video to record a clip. It uploads instantly and is saved to that drill.",
+            "Coach-attached reference media (from the Custom Drill form) shows under Coach's Reference so the player can watch a demo mid-set.",
+            "Head coaches AND assistant coaches can edit the plan and capture media. Captures persist immediately — no manual save needed during a session.",
+        ],
+    ),
+    (
+        "10. Assistant Coach Access",
         "Invite another registered user to help run a specific team without giving away the whole account.",
         [
             "Owner: open the Team Roster board and find the Assistant Coach Invite panel at the top.",
@@ -148,7 +164,7 @@ FEATURES = [
         ],
     ),
     (
-        "10. Session Timer",
+        "11. Session Timer",
         "A sticky, floating countdown clock that runs a whole session hands-free.",
         [
             "On any Session View the timer sits pinned at the top.",
@@ -160,7 +176,7 @@ FEATURES = [
         ],
     ),
     (
-        "11. Parent Handout",
+        "12. Parent Handout",
         "One-page take-home summary for parents or younger players.",
         [
             "Open a Session View.",
@@ -171,7 +187,7 @@ FEATURES = [
         ],
     ),
     (
-        "12. Print & PDF Export",
+        "13. Print & PDF Export",
         "Every key page has a print-optimised layout.",
         [
             "Dashboard, Program, Session, Roster and Parent Handout all support the browser Print dialog.",
@@ -181,7 +197,7 @@ FEATURES = [
         ],
     ),
     (
-        "13. Media — Photos & Videos",
+        "14. Media — Photos & Videos",
         "Attach images and video clips throughout the app. Backed by secure per-user storage.",
         [
             "Upload spots: team logo, player photo, custom-drill media, session photos, program cover.",
@@ -194,7 +210,7 @@ FEATURES = [
         ],
     ),
     (
-        "14. PlayHQ Shortcut",
+        "15. PlayHQ Shortcut",
         "One-tap link out to Basketball Australia's fixtures / stats platform.",
         [
             "On the Dashboard, tap the Open PlayHQ tile.",
@@ -202,7 +218,7 @@ FEATURES = [
         ],
     ),
     (
-        "15. Progressive Web App (PWA)",
+        "16. Progressive Web App (PWA)",
         "Install Court Mastery like a native app on iOS, Android or desktop.",
         [
             "iOS: open Court Mastery in Safari → tap the Share icon → Add to Home Screen.",
@@ -212,7 +228,7 @@ FEATURES = [
         ],
     ),
     (
-        "16. Drill Library Reference",
+        "17. Drill Library Reference",
         "54+ curated static drills across skill tiers — no AI, no drift, no copyright risk.",
         [
             "Amend Session → Drill Library button opens the searchable modal.",
@@ -373,7 +389,7 @@ def build():
     )
 
     stats = [
-        ["16", "50+", "500MB", "6", "0"],
+        ["17", "50+", "500MB", "6", "0"],
         ["Features", "Curated drills", "Max video size", "Skill tiers", "Ads"],
     ]
     stat_table = Table(stats, colWidths=[doc.width / 5] * 5, rowHeights=[16 * mm, 8 * mm])
@@ -411,7 +427,9 @@ def build():
     )
 
     quick = [
-        ("Run today's training", "Programs → open program → tap this week → tap ▶ Play on the Session Timer."),
+        ("Run today's team training", "Programs → open program → tap this week → tap ▶ Play on the Session Timer."),
+        ("Build a player's daily plan", "Team board → tap the player → tap Individual Daily Program → Library / Custom Drill → Save Plan."),
+        ("Capture a clip mid-drill", "Open the individual program → in Run mode, tap Video on a drill → phone opens the camera → record → auto-uploads."),
         ("Print a parent take-home", "Session View → Parent Handout → Print."),
         ("Bring on an assistant coach", "Team board → Assistant Coach Invite → Copy the 6-digit code → give it to the assistant → they Register + tap Join Team."),
         ("Update a player's stats", "Team board → tap the player row → edit fields in the Player Profile modal → Save Profile."),

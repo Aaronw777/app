@@ -155,6 +155,40 @@ class TeamJoinInput(BaseModel):
     code: str = Field(min_length=4, max_length=12)
 
 
+class IndividualProgramUpdate(BaseModel):
+    drills: List[dict]
+
+
+def _clean_drills(raw: List[dict], *, max_drills: int = 10) -> tuple[List[dict], int]:
+    """Sanitise a list of drills for either a session or an individual plan.
+    Returns (cleaned_drills, total_minutes)."""
+    cleaned: List[dict] = []
+    for d in raw[:max_drills]:
+        if not isinstance(d, dict):
+            continue
+        try:
+            duration = int(d.get("duration", 0))
+        except (TypeError, ValueError):
+            duration = 0
+        # captured media ids from the player/coach during the session
+        cap_raw = d.get("player_media_ids") or []
+        captures = [str(x) for x in cap_raw if x][:24] if isinstance(cap_raw, list) else []
+        cleaned.append({
+            "id": str(d.get("id") or f"custom-{uuid.uuid4()}"),
+            "name": str(d.get("name", "Untitled drill"))[:120],
+            "category": str(d.get("category", "Custom"))[:60],
+            "level": int(d.get("level", 1) or 1),
+            "duration": max(1, min(duration, 60)),
+            "description": str(d.get("description", ""))[:600],
+            "video": str(d.get("video", ""))[:200],
+            "coach_notes": str(d.get("coach_notes", ""))[:600],
+            "custom": bool(d.get("custom", False)) or str(d.get("id", "")).startswith("custom-"),
+            "media_id": str(d.get("media_id") or "") or None,
+            "player_media_ids": captures,
+        })
+    return cleaned, sum(x["duration"] for x in cleaned)
+
+
 _STAT_KEYS = ("games_played", "points_3s", "points_2s", "points_1s", "total_fouls")
 
 
@@ -583,6 +617,38 @@ async def update_player_bio(
     return {"ok": True}
 
 
+@api_router.patch("/teams/{team_id}/players/{player_id}/program")
+async def update_individual_program(
+    team_id: str,
+    player_id: str,
+    payload: IndividualProgramUpdate,
+    user: dict = Depends(get_current_user),
+):
+    """Head-coach OR assistant can build/update a player's individual daily
+    1-hour plan (up to 10 drills). Both roles need edit access because
+    assistants often build ad-hoc plans on the sideline."""
+    team = await _team_for_user(team_id, user["id"])
+    roster = team.get("roster", [])
+    drills, total_minutes = _clean_drills(payload.drills, max_drills=10)
+
+    updated = False
+    for p in roster:
+        if p["player_id"] == player_id:
+            p["individual_program"] = {
+                "drills": drills,
+                "total_minutes": total_minutes,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_by": user["id"],
+            }
+            updated = True
+            break
+    if not updated:
+        raise HTTPException(status_code=404, detail="Player not found")
+
+    await db.teams.update_one({"id": team_id}, {"$set": {"roster": roster}})
+    return {"ok": True, "total_minutes": total_minutes, "drill_count": len(drills)}
+
+
 @api_router.patch("/teams/{team_id}/players/{player_id}/sessions/{week}")
 async def update_roster_session(
     team_id: str,
@@ -631,7 +697,7 @@ async def update_roster_session(
 
 
 # ============ Media / File Storage ============
-_ALLOWED_KINDS = {"team-logo", "player-photo", "drill-media", "session-photo", "program-cover", "misc"}
+_ALLOWED_KINDS = {"team-logo", "player-photo", "drill-media", "session-photo", "program-cover", "player-capture", "misc"}
 
 
 @api_router.post("/media/upload")

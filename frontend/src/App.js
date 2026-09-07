@@ -15,6 +15,7 @@ import SessionView from "@/pages/SessionView";
 import ParentHandout from "@/pages/ParentHandout";
 import Teams from "@/pages/Teams";
 import TeamDetail from "@/pages/TeamDetail";
+import IndividualProgram from "@/pages/IndividualProgram";
 
 function App() {
   return (
@@ -79,6 +80,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <TeamDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/teams/:teamId/players/:playerId/program"
+              element={
+                <ProtectedRoute>
+                  <IndividualProgram />
                 </ProtectedRoute>
               }
             />

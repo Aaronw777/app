@@ -124,7 +124,7 @@ def open_stream(path: str):
 
 
 def upload_bytes(user_id: str, kind: str, data: bytes, content_type: str, ext: str | None) -> dict:
-    """kind: 'team-logo' | 'player-photo' | 'drill-media' | 'session-photo' | 'program-cover'"""
+    """kind: 'team-logo' | 'player-photo' | 'drill-media' | 'session-photo' | 'program-cover' | 'player-capture'"""
     if content_type not in ALLOWED:
         raise ValueError(f"Content type '{content_type}' not allowed")
     is_video = content_type in ALLOWED_VIDEO

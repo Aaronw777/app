@@ -21,6 +21,7 @@ export default function MediaUpload({
   accept = "image/*",
   label,
   size = "md",
+  capture,
 }) {
   const inputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
@@ -134,6 +135,7 @@ export default function MediaUpload({
         ref={inputRef}
         type="file"
         accept={accept}
+        capture={capture || undefined}
         onChange={(e) => upload(e.target.files?.[0])}
         className="hidden"
         data-testid={`media-input-${kind}`}

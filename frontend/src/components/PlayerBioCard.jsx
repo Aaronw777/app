@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { X, Save, Trophy, Calendar } from "lucide-react";
+import { X, Save, Trophy, Calendar, Dumbbell, ChevronRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import MediaUpload from "@/components/MediaUpload";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
@@ -172,6 +173,37 @@ export default function PlayerBioCard({
                 {totalPoints}
               </span>
             </div>
+          </div>
+
+          {/* Individual daily program shortcut */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <Dumbbell size={14} className="text-[#FFCD00]" />
+              <div className="text-xs uppercase tracking-[0.25em] text-white/60 font-bold">
+                Individual Daily Program
+              </div>
+            </div>
+            <Link
+              to={`/teams/${teamId}/players/${player.player_id}/program`}
+              onClick={onClose}
+              data-testid="player-individual-program-link"
+              className="flex items-center justify-between bg-black/40 border border-white/10 hover:border-[#FFCD00] rounded-sm px-4 py-3 group transition-colors"
+            >
+              <div>
+                <div className="text-sm text-white/80">
+                  {(player.individual_program?.drills?.length || 0) > 0
+                    ? `${player.individual_program.drills.length}-drill · ${player.individual_program.total_minutes || 0} min plan`
+                    : "No plan yet — build a 1-hour tailored session"}
+                </div>
+                <div className="text-[10px] uppercase tracking-[0.25em] text-white/40 mt-0.5">
+                  Timer · camera capture · coach media · up to 10 drills
+                </div>
+              </div>
+              <ChevronRight
+                size={16}
+                className="text-white/40 group-hover:text-[#FFCD00]"
+              />
+            </Link>
           </div>
 
           {/* Attendance history */}
